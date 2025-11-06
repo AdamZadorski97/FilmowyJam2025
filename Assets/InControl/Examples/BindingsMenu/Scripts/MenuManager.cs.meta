@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 1a35fc06923764244949351b57da2596
+timeCreated: 1511129930
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14695
+  packageName: InControl
+  packageVersion: 1.8.11
+  assetPath: Assets/InControl/Examples/BindingsMenu/Scripts/MenuManager.cs
+  uploadId: 744179

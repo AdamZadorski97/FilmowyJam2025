@@ -1,0 +1,141 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff7b939c07364ed4580fe834ba8e8374, type: 3}
+  m_Name: BindingProperites
+  m_EditorClassIdentifier: 
+  bindings:
+  - name: Menu
+    inputControlType: 106
+    mouse: 0
+    key: 13
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Menu Up
+    inputControlType: 11
+    mouse: 0
+    key: 85
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Menu Down
+    inputControlType: 12
+    mouse: 0
+    key: 86
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Menu Enter
+    inputControlType: 19
+    mouse: 0
+    key: 72
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Go Left
+    inputControlType: 3
+    mouse: 0
+    key: 83
+    controllerSprite: {fileID: 21300000, guid: 693041c72edea4e47b393710ff80fcf7, type: 3}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 21300000, guid: 028e9f50cc1129c41a3859a3ee1119b8, type: 3}
+  - name: Go Right
+    inputControlType: 4
+    mouse: 0
+    key: 84
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Go Down
+    inputControlType: 2
+    mouse: 0
+    key: 86
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Go Up
+    inputControlType: 1
+    mouse: 0
+    key: 85
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Jump
+    inputControlType: 19
+    mouse: 0
+    key: 76
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Look Left
+    inputControlType: 8
+    mouse: 0
+    key: 0
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Look Right
+    inputControlType: 9
+    mouse: 0
+    key: 0
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Look Up
+    inputControlType: 6
+    mouse: 0
+    key: 0
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Look Down
+    inputControlType: 7
+    mouse: 0
+    key: 0
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Interaction
+    inputControlType: 20
+    mouse: 0
+    key: 0
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Crouch
+    inputControlType: 21
+    mouse: 0
+    key: 0
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Dash
+    inputControlType: 16
+    mouse: 0
+    key: 4
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Kick
+    inputControlType: 15
+    mouse: 0
+    key: 0
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}
+  - name: Punch
+    inputControlType: 16
+    mouse: 0
+    key: 0
+    controllerSprite: {fileID: 0}
+    mouseSprite: {fileID: 0}
+    keyboardSprite: {fileID: 0}

@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 775a8f1f44fc343beb78a4d061c1dc75
+DefaultImporter:
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14695
+  packageName: InControl
+  packageVersion: 1.8.11
+  assetPath: Assets/InControl/Examples/TouchControls/TouchControls.unity
+  uploadId: 744179

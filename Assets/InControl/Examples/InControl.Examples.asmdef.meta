@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ef94de8ab7c1c49639d691e3855be0f8
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14695
+  packageName: InControl
+  packageVersion: 1.8.11
+  assetPath: Assets/InControl/Examples/InControl.Examples.asmdef
+  uploadId: 744179

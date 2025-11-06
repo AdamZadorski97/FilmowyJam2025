@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 13d3698de517d438a96790fc135fae72
+timeCreated: 1510936328
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14695
+  packageName: InControl
+  packageVersion: 1.8.11
+  assetPath: Assets/InControl/Examples/BindingsMenu/Scripts/BindingButton.cs
+  uploadId: 744179

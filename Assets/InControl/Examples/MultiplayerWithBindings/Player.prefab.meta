@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 02454d8b126a3444883c226f09a6982e
+NativeFormatImporter:
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14695
+  packageName: InControl
+  packageVersion: 1.8.11
+  assetPath: Assets/InControl/Examples/MultiplayerWithBindings/Player.prefab
+  uploadId: 744179

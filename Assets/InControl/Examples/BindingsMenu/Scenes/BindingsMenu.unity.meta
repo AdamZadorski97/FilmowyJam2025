@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 0c26169aacaa14fb08f75e98b9b873aa
+timeCreated: 1510934054
+licenseType: Store
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14695
+  packageName: InControl
+  packageVersion: 1.8.11
+  assetPath: Assets/InControl/Examples/BindingsMenu/Scenes/BindingsMenu.unity
+  uploadId: 744179

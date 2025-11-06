@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: b9c3c211fdf7e49c1a453cf2d413083c
+DefaultImporter:
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14695
+  packageName: InControl
+  packageVersion: 1.8.11
+  assetPath: Assets/InControl/Examples/MultiplayerWithBindings/MultiplayerWithBindings.unity
+  uploadId: 744179
