@@ -239,6 +239,69 @@ MonoBehaviour:
   maxNits:
     m_OverrideState: 1
     m_Value: 1000
+--- !u!114 &-5504524970001034320
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fd03cbbfa7b7fe4dbc3d7709b42d662, type: 3}
+  m_Name: ScreenSpaceGlobalIlluminationVolume
+  m_EditorClassIdentifier: 
+  active: 1
+  enable:
+    m_OverrideState: 1
+    m_Value: 0
+  thicknessMode:
+    m_OverrideState: 1
+    m_Value: 0
+  depthBufferThickness:
+    m_OverrideState: 1
+    m_Value: 0.1
+  quality:
+    m_OverrideState: 1
+    m_Value: 0
+  fullResolutionSS:
+    m_OverrideState: 1
+    m_Value: 0
+  resolutionScaleSS:
+    m_OverrideState: 1
+    m_Value: 0.5
+  sampleCount:
+    m_OverrideState: 1
+    m_Value: 2
+  maxRaySteps:
+    m_OverrideState: 1
+    m_Value: 32
+  denoiseSS:
+    m_OverrideState: 1
+    m_Value: 1
+  denoiserAlgorithmSS:
+    m_OverrideState: 1
+    m_Value: 1
+  denoiseIntensitySS:
+    m_OverrideState: 1
+    m_Value: 0.95
+  denoiserRadiusSS:
+    m_OverrideState: 1
+    m_Value: 0.6
+  secondDenoiserPassSS:
+    m_OverrideState: 1
+    m_Value: 1
+  rayMiss:
+    m_OverrideState: 1
+    m_Value: 3
+  indirectDiffuseLightingMultiplier:
+    m_OverrideState: 1
+    m_Value: 1
+  indirectDiffuseRenderingLayers:
+    m_OverrideState: 1
+    m_Value:
+      serializedVersion: 0
+      m_Bits: 4294967295
 --- !u!114 &-5360449096862653589
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -465,6 +528,7 @@ MonoBehaviour:
   - {fileID: -6288072647309666549}
   - {fileID: 7518938298396184218}
   - {fileID: -1410297666881709256}
+  - {fileID: -5504524970001034320}
 --- !u!114 &853819529557874667
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -853,6 +917,104 @@ MonoBehaviour:
   intensity:
     m_OverrideState: 1
     m_Value: 0
+--- !u!114 &5455539407911221472
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d6d1d4d11bcfd94c86688ee312adacc, type: 3}
+  m_Name: ScreenSpacePathTracing
+  m_EditorClassIdentifier: 
+  active: 1
+  <displayName>k__BackingField: 
+  state:
+    <fieldHash>k__BackingField: 104153616
+    m_OverrideState: 1
+    m_Value: 0
+  maximumSamples:
+    <fieldHash>k__BackingField: 343504008
+    m_OverrideState: 1
+    m_Value: 256
+  maximumDepth:
+    <fieldHash>k__BackingField: 582854400
+    m_OverrideState: 1
+    m_Value: 4
+  maximumIntensity:
+    <fieldHash>k__BackingField: 822204792
+    m_OverrideState: 1
+    m_Value: 10
+  samplesPerPixel:
+    <fieldHash>k__BackingField: 1061555184
+    m_OverrideState: 1
+    m_Value: 1
+  maximumSteps:
+    <fieldHash>k__BackingField: 1300905576
+    m_OverrideState: 1
+    m_Value: 24
+  stepSize:
+    <fieldHash>k__BackingField: 1540255968
+    m_OverrideState: 1
+    m_Value: 0.4
+  noiseMethod:
+    <fieldHash>k__BackingField: 1779606360
+    m_OverrideState: 1
+    m_Value: 0
+  denoiser:
+    <fieldHash>k__BackingField: 2018956752
+    m_OverrideState: 1
+    m_Value: 1
+  accumFactor:
+    <fieldHash>k__BackingField: -2036660152
+    m_OverrideState: 1
+    m_Value: 0.9
+  ambientStored:
+    <fieldHash>k__BackingField: -1797309760
+    m_OverrideState: 1
+    m_Value: 0
+  ambientIntensity:
+    <fieldHash>k__BackingField: -1557959368
+    m_OverrideState: 1
+    m_Value: 1
+  ambientLight:
+    <fieldHash>k__BackingField: -1318608976
+    m_OverrideState: 1
+    m_Value:
+      r: 0
+      g: 0
+      b: 0
+      a: 1
+    hdr: 0
+  ambientGroundColor:
+    <fieldHash>k__BackingField: -600557800
+    m_OverrideState: 1
+    m_Value:
+      r: 0
+      g: 0
+      b: 0
+      a: 1
+    hdr: 0
+  ambientEquatorColor:
+    <fieldHash>k__BackingField: -121857016
+    m_OverrideState: 1
+    m_Value:
+      r: 0
+      g: 0
+      b: 0
+      a: 1
+    hdr: 0
+  ambientSkyColor:
+    <fieldHash>k__BackingField: 835544552
+    m_OverrideState: 1
+    m_Value:
+      r: 0
+      g: 0
+      b: 0
+      a: 1
+    hdr: 0
 --- !u!114 &6940869943325143175
 MonoBehaviour:
   m_ObjectHideFlags: 3
