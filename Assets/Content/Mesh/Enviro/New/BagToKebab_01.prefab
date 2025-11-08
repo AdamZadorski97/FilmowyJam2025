@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5221976164595831318}
   - component: {fileID: 4453823300168427771}
-  - component: {fileID: 3161849989950779297}
   - component: {fileID: 323319846059230350}
   - component: {fileID: 3419656024655037692}
   - component: {fileID: 2779246686907627248}
@@ -52,29 +51,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1130eb4ec9a5d094183b982a7c25c1c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &3161849989950779297
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1687186572781723272}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f3d72a37d857bd4490f175c5f3111b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  OnTriggerEnterEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnTriggerExitEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnInteractEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  playerController: {fileID: 0}
-  isOnlyForMan: 0
 --- !u!65 &323319846059230350
 BoxCollider:
   m_ObjectHideFlags: 0

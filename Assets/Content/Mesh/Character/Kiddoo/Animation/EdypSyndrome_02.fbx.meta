@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 7cb475c7c50a4544299ab3df07ae397c
+guid: ef0d8d685ca7d1647969cb71f4eba540
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -31,9 +31,9 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: EdypSyndrome
-      takeName: EdypSyndrome
-      internalID: 666716388766316750
+      name: EdypSyndrome_02
+      takeName: EdypSyndrome_02
+      internalID: 7068189185373252053
       firstFrame: 0
       lastFrame: 100
       wrapMode: 0
@@ -446,18 +446,18 @@ ModelImporter:
         length: 0
         modified: 0
     skeleton:
-    - name: EdypSyndrome(Clone)
+    - name: EdypSyndrome_02(Clone)
       parentName: 
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: Character_Gangster
-      parentName: EdypSyndrome(Clone)
+      parentName: EdypSyndrome_02(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: Root
-      parentName: EdypSyndrome(Clone)
+      parentName: EdypSyndrome_02(Clone)
       position: {x: 0.00000006750134, y: 0.0023049163, z: 0.01408649}
       rotation: {x: -0.000000019484757, y: -4.6494416e-32, z: 2.3861944e-24, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -683,24 +683,24 @@ ModelImporter:
       scale: {x: 1, y: 0.99999994, z: 1}
     - name: LowerLeg_L
       parentName: UpperLeg_L
-      position: {x: 0.313724, y: -0.0000003528595, z: 0.00000019073485}
+      position: {x: 0.313724, y: -0.00000034332274, z: 0.000000114440915}
       rotation: {x: 0.6443777, y: 0.024462592, z: -0.004737754, w: 0.76430136}
-      scale: {x: 1.0000002, y: 1, z: 1.0000002}
+      scale: {x: 1.0000002, y: 1.0000001, z: 1.0000002}
     - name: Ankle_L
       parentName: LowerLeg_L
-      position: {x: 0.29629293, y: -0.000000028610229, z: -0.0000007629394}
-      rotation: {x: 0.8576702, y: 0.5072128, z: 0.039752673, w: -0.07454368}
-      scale: {x: 1, y: 0.9999999, z: 1}
+      position: {x: 0.29629296, y: -0.000000057220458, z: -0.0000006866455}
+      rotation: {x: 0.8576702, y: 0.5072128, z: 0.03975272, w: -0.07454378}
+      scale: {x: 1.0000001, y: 1.0000002, z: 0.99999964}
     - name: Ball_L
       parentName: Ankle_L
-      position: {x: 0.088655025, y: 0, z: 0.000000038146972}
-      rotation: {x: 0.000000055879347, y: 0.00000007823109, z: -0.2700159, w: 0.9628559}
-      scale: {x: 1.0000002, y: 1.0000008, z: 1.0000002}
+      position: {x: 0.08865503, y: -0.000000038146972, z: 0.000000038146972}
+      rotation: {x: 0.00000001862645, y: -0.000000029802319, z: -0.2700159, w: 0.9628559}
+      scale: {x: 1.0000002, y: 1.0000001, z: 1.0000004}
     - name: Toes_L
       parentName: Ball_L
       position: {x: 0.057320274, y: 3.2327473e-14, z: -3.2986946e-14}
-      rotation: {x: -0.000000038045005, y: -0.7071068, z: 0.00000009764965, w: 0.70710677}
-      scale: {x: 0.9999997, y: 0.9999991, z: 0.9999993}
+      rotation: {x: -0.000000027582828, y: -0.7071069, z: 0.00000007228631, w: 0.70710677}
+      scale: {x: 0.9999997, y: 0.9999998, z: 0.9999997}
     armTwist: 0.5
     foreArmTwist: 0.5
     upperLegTwist: 0.5
