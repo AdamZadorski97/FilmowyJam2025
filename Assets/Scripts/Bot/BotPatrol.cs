@@ -66,8 +66,15 @@ public class BotPatrol : MonoBehaviour
     private float catchDistance = 2.0f;
 
     [SerializeField]
-    [Tooltip("Czas cooldownu po złapaniu, zanim bot wróci do akcji.")]
-    private float catchCooldown = 2.0f;
+    [Tooltip("Czas stunu/mrugania gracza (np. 5.0s).")]
+    private float stunDuration = 5.0f;
+
+    [SerializeField]
+    [Tooltip("Czas cooldownu nauczyciela po złapaniu tego gracza, zanim będzie mógł go gonić ponownie (np. 15.0s).")]
+    private float playerChaseCooldown = 15.0f;
+
+    [Tooltip("Czas trwania animacji ataku bota, po którym wznawia patrol (np. 2.0s).")]
+    [SerializeField] private float attackAnimationDuration = 2.0f;
 
     [Tooltip("Czas kontynuacji pościgu po straceniu gracza (np. 5.0s).")]
     [SerializeField] private float chaseRefreshTime = 5.0f;
@@ -86,7 +93,7 @@ public class BotPatrol : MonoBehaviour
     [Tooltip("Nazwa triggera dla animacji ataku (Gdy gracz traci OSTATNIE życie).")]
     private string finalAttackTrigger = "FinalAttack";
 
-    private bool isOnCatchCooldown = false;
+    private bool isOnAttackCooldown = false; // Cooldown bota na animację ataku/ruch
 
     // Stringi do wywoływania animacji
     private const string ANIM_IS_WALKING = "IsWalking";
@@ -181,9 +188,6 @@ public class BotPatrol : MonoBehaviour
         if (animator != null && !string.IsNullOrEmpty(paramName)) animator.SetTrigger(paramName);
     }
 
-    /// <summary>
-    /// Wywoływane przez ScoreManager, gdy gracz straci ostatnie życie.
-    /// </summary>
     public void TriggerFinalAttack()
     {
         if (!string.IsNullOrEmpty(finalAttackTrigger))
@@ -202,6 +206,9 @@ public class BotPatrol : MonoBehaviour
     {
         if (teacherFOV.DetectedPlayer != null)
         {
+            // NIE GÓŃ, JEŚLI GRACZ MA WŁASNY COOLDOWN PO ZŁAPANIU
+            if (teacherFOV.DetectedPlayer.IsInCooldown()) return;
+
             lastKnownPlayerPosition = teacherFOV.DetectedPlayer.transform.position;
             chaseTimer = chaseRefreshTime;
 
@@ -242,23 +249,31 @@ public class BotPatrol : MonoBehaviour
     {
         PlayerController player = teacherFOV.DetectedPlayer;
 
+        // Jeśli jest w cooldownie LUB trwa animacja ataku bota, nie rób nic
+        if (isOnAttackCooldown) return;
+        if (player != null && player.IsInCooldown()) return;
+
         if (player != null)
         {
             lastKnownPlayerPosition = player.transform.position;
             agent.SetDestination(lastKnownPlayerPosition);
 
-            if (!isOnCatchCooldown)
+            if (!isOnAttackCooldown)
             {
                 float distToPlayer = Vector3.Distance(transform.position, player.transform.position);
 
                 if (distToPlayer <= catchDistance)
                 {
+                    // WŁĄCZ STUN GRACZOWI ORAZ COOLDOWN NA PONOWNY POŚCIG
+                    player.SetStunned(stunDuration, playerChaseCooldown);
+
                     SetAnimationTrigger(attackTrigger);
-                    isOnCatchCooldown = true;
+                    isOnAttackCooldown = true;
 
-                    OnPlayerCaught.Invoke(player);
+                    OnPlayerCaught.Invoke(player); // Wywołaj event, który zresetuje punkty
 
-                    StartCoroutine(WaitAfterCatchAndResumePatrol(catchCooldown));
+                    // Zatrzymujemy bota, by zagrał animację ataku, następnie wznawiamy patrol
+                    StartCoroutine(WaitAfterCatchAndResumePatrol(attackAnimationDuration));
                     return;
                 }
             }
@@ -384,13 +399,13 @@ public class BotPatrol : MonoBehaviour
 
         agent.updateRotation = true;
 
-        isOnCatchCooldown = false;
+        isOnAttackCooldown = false;
 
         currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
         StartMovingToNextWaypoint();
     }
 
-    // --- OnDrawGizmos (bez zmian) ---
+    // --- OnDrawGizmos ---
     private void OnDrawGizmos()
     {
         if (waypoints == null || waypoints.Count < 1) return;

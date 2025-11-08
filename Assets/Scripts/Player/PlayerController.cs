@@ -20,6 +20,7 @@ public class PlayerController : MonoBehaviour
 
     // !!! WAŻNE: Mesh/Wizualny Model Postaci !!!
     [SerializeField] private GameObject playerMesh;
+    private Renderer playerRenderer; // NOWY: Referencja do renderera modelu
 
     [Header("Eventy Akcji")]
     public UnityEvent OnActionStarted;
@@ -38,12 +39,17 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float punchDuration = 0.5f;
     [SerializeField] private float kickDuration = 0.8f;
 
+    // NOWE: Pola do Stunu i Cooldownu
+    [Header("Stun i Cooldown")]
+    [Tooltip("Czy gracz jest aktualnie oszołomiony (blokada ruchu).")]
+    public bool isStunned = false;
+    private float stunCooldownEndTime = 0f; // Czas, po którym nauczyciel może gonić gracza ponownie
+
+    // NOWE: Pola prędkości
+    public float currentAgentSpeed; // Aktualnie obliczona prędkość NavMeshAgenta
     private float currentMoveSpeed; // Aktualnie obliczona prędkość (docelowa dla NavMeshAgent)
-    private float animatorSpeedBlend; // Prędkość animatora (bezpośrednio z NavMeshAgent)
     private Vector3 moveInput;
     private Vector2 lookInput;
-
-    // USUNIĘTO: blendVelocity, animationDampTime
 
     [SerializeField] private float groundDistance = 0.2f;
     [SerializeField] private LayerMask groundMask;
@@ -54,7 +60,7 @@ public class PlayerController : MonoBehaviour
     // Nowe stany dla ruchu i akcji
     public bool isRunning = false;
     public bool isSneaking = false;
-    public bool isActionLocked = false; // Blokada ruchu/wejścia podczas ataku
+    public bool isActionLocked = false;
 
     public bool isCrouch;
     public bool isMoveObject;
@@ -87,30 +93,90 @@ public class PlayerController : MonoBehaviour
             agent.acceleration = accelerationRate;
         }
         currentMoveSpeed = baseMoveSpeed;
+
+        if (playerMesh != null)
+        {
+            playerRenderer = playerMesh.GetComponentInChildren<Renderer>();
+        }
+    }
+
+    /// <summary>
+    /// Sprawdza, czy gracz jest w cooldownie i nie może być ponownie złapany/ścignany przez nauczyciela.
+    /// </summary>
+    public bool IsInCooldown()
+    {
+        return Time.time < stunCooldownEndTime;
+    }
+
+    /// <summary>
+    /// Ustawia gracza w stan stun (z mruganiem) i ustawia cooldown nauczyciela.
+    /// </summary>
+    /// <param name="stunDuration">Czas trwania stunu (mrugania).</param>
+    /// <param name="chaseCooldown">Czas, przez który nauczyciel nie może ponownie gonić tego gracza.</param>
+    public void SetStunned(float stunDuration, float chaseCooldown)
+    {
+        if (isStunned) return;
+
+        isStunned = true;
+        isActionLocked = true;
+
+        // ZABLOKOWANIE RUCHU AGENTA
+        if (agent != null)
+        {
+            agent.velocity = Vector3.zero;
+            agent.isStopped = true;
+        }
+
+        // Ustawienie końca cooldownu dla nauczyciela (łączny czas)
+        stunCooldownEndTime = Time.time + stunDuration + chaseCooldown;
+
+        StartCoroutine(StunCoroutine(stunDuration));
+    }
+
+    private IEnumerator StunCoroutine(float duration)
+    {
+        float startTime = Time.time;
+        float blinkInterval = 0.2f;
+
+        while (Time.time < startTime + duration)
+        {
+            if (playerRenderer != null)
+            {
+                playerRenderer.enabled = !playerRenderer.enabled; // Mruganie
+            }
+            yield return new WaitForSeconds(blinkInterval);
+        }
+
+        // Koniec stunu (fizycznego)
+        if (playerRenderer != null)
+        {
+            playerRenderer.enabled = true;
+        }
+
+        isStunned = false;
+        isActionLocked = false;
+        if (agent != null)
+        {
+            agent.isStopped = false;
+        }
+
+        Debug.Log($"Gracz {playerID} jest wolny. Nauczyciel ma cooldown do {stunCooldownEndTime}s.");
     }
 
     private void Update()
     {
         Vector2 rawInput = Vector2.zero;
         float maxSpeed;
-        if (moveInput == new Vector3(0, 0, 0))
-        {
-            animator.SetFloat("SpeedBlend", 0);
-        }
-        else
-        {
-            animator.SetFloat("SpeedBlend", GetComponent<NavMeshAgent>().speed);
-        }
-      
+
         // --- Blokada akcji/ruchu ---
-        if (isActionLocked)
+        if (isActionLocked || isStunned)
         {
             moveInput = Vector3.zero;
             if (agent != null) agent.velocity = Vector3.zero;
             if (animator != null)
             {
                 animator.SetBool("IsMoving", false);
-                
+                animator.SetBool("IsRunning", false); // Dodane dla pewności
             }
             return;
         }
@@ -233,18 +299,26 @@ public class PlayerController : MonoBehaviour
             agent.speed = currentMoveSpeed;
         }
 
-        // --- Aktualizacja Animator SpeedBlend (BEZPOŚREDNIE PRZYPISANIE VELOCITY) ---
+        // --- Aktualizacja Animator SpeedBlend (NAPRAWIONA WERSJA) ---
         if (animator != null && agent != null)
         {
             // POBIERZ FAKTYCZNĄ PRĘDKOŚĆ AGENTA
-            float actualVelocityMagnitude = agent.velocity.magnitude;
+            currentAgentSpeed = agent.velocity.magnitude;
 
-            // NORMALIZACJA: Faktyczna prędkość agenta / Maksymalna prędkość w obecnym stanie
-            // Jeśli maxSpeed == 0, SpeedBlend = 0.
-            float targetSpeedBlend = (maxSpeed > 0) ? Mathf.Clamp01(actualVelocityMagnitude / maxSpeed) : 0f;
+            // OBLICZENIE ZNORMALIZOWANEJ PRĘDKOŚCI (0.0 do 1.0)
+            float currentMaxSpeed = isCrouch ? sneakSpeed : (isRunning ? runSpeed : baseMoveSpeed);
+
+            // Znormalizowanie: Faktyczna prędkość / Maksymalna prędkość
+            float targetSpeedBlend = (currentMaxSpeed > 0) ? Mathf.Clamp01(currentAgentSpeed / currentMaxSpeed) : 0f;
+
+            // Wygładzanie blendu dla płynniejszych przejść
+            float currentBlend = animator.GetFloat("SpeedBlend");
+            float blendedValue = GetComponent<NavMeshAgent>().speed;
+
+            animator.SetFloat("SpeedBlend", blendedValue);
 
             // Ustawienie IsMoving: jeśli faktyczna prędkość jest większa niż minimalna
-            if (targetSpeedBlend > 0.001f) // Minimalny próg dla ruchu
+            if (currentAgentSpeed > 0.001f)
             {
                 animator.SetBool("IsMoving", true);
             }
@@ -252,19 +326,13 @@ public class PlayerController : MonoBehaviour
             {
                 animator.SetBool("IsMoving", false);
             }
-
-            // BEZPOŚREDNIE PRZYPISANIE - ZERO WYGŁADZANIA
-          //  UpdateAnimatorSpeed(targetSpeedBlend, maxSpeed);
         }
     }
-
-    // Zmieniona metoda: Usuwa SmoothDamp i blendVelocity
-
 
     private void FixedUpdate()
     {
         // Ruch i Rotacja NavMeshAgent
-        if (agent != null && agent.enabled)
+        if (agent != null && agent.enabled && !isStunned)
         {
             Vector3 worldMovement = moveInput;
 
@@ -298,9 +366,14 @@ public class PlayerController : MonoBehaviour
                 agent.velocity = Vector3.zero;
             }
         }
+        else if (agent != null && isStunned)
+        {
+            // Zablokuj ruch i obrót NavMeshAgenta podczas stunu
+            agent.velocity = Vector3.zero;
+        }
     }
 
-    // --- Reszta Metod (Crouch, Jump, Interact, GetHit, WalkSound) ---
+    // --- Reszta Metod (Crouch, Jump, Interact, GetHit, WalkSound, itd.) ---
 
     private void Crouch()
     {
