@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-// Upewnij się, że masz te usingi
-// (Jeśli używasz wersji z logami, zachowaj ją)
-
 public class HoldInteractor : MonoBehaviour
 {
     [Header("Ustawienia Interakcji")]
@@ -14,10 +11,6 @@ public class HoldInteractor : MonoBehaviour
     [Tooltip("Wywoływane, gdy gracz PRAWIDŁOWO przytrzyma przycisk przez 'maxHoldTime'")]
     public UnityEvent OnHoldComplete;
 
-    // ----- USUNIĘTE UNITY EVENTS -----
-    // public UnityEvent OnHoldStarted;     <-- Usuń to
-    // public UnityEvent OnHoldCancelled;   <-- Usuń to
-
     // --- Zmienne prywatne ---
     private PlayerController currentPlayerInTrigger;
     private float currentHoldTime = 0f;
@@ -27,7 +20,14 @@ public class HoldInteractor : MonoBehaviour
     // --- DEBUG ---
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = true;
-    private void Log(string message) { /*...*/ } // (Zachowaj swoją funkcję Log)
+
+    private void Log(string message)
+    {
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[HoldInteractor - {gameObject.name}] {message}");
+        }
+    }
     // --- KONIEC DEBUG ---
 
     public float GetHoldProgress()
@@ -38,7 +38,6 @@ public class HoldInteractor : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // ... (bez zmian) ...
         PlayerController player = other.GetComponent<PlayerController>();
         if (player == null || currentPlayerInTrigger != null) return;
 
@@ -62,8 +61,8 @@ public class HoldInteractor : MonoBehaviour
             {
                 Log("...Gracz trzymał przycisk, ale wyszedł. ANULOWANIE.");
 
-                // OnHoldCancelled.Invoke(); // <-- ZAMIEŃ TO...
-                HoldProgressService.Hide(); // <-- ...NA TO.
+                HoldProgressService.Hide();
+                currentPlayerInTrigger.OnActionFinished.Invoke(); // WYZWALANIE ZAKOŃCZENIA
             }
 
             Log("...Czyszczę referencję do gracza.");
@@ -72,7 +71,6 @@ public class HoldInteractor : MonoBehaviour
             isHolding = false;
             holdWasCompleted = false;
         }
-        // ... (reszta bez zmian) ...
     }
 
     private void Update()
@@ -98,20 +96,20 @@ public class HoldInteractor : MonoBehaviour
                 Log("Gracz ZACZĄŁ trzymać przycisk.");
                 isHolding = true;
 
-                // OnHoldStarted.Invoke(); // <-- ZAMIEŃ TO...
-                HoldProgressService.Show(this); // <-- ...NA TO. (Przekazujemy 'this' do śledzenia)
+                HoldProgressService.Show(this);
+                currentPlayerInTrigger.OnActionStarted.Invoke(); // WYZWALANIE ROZPOCZĘCIA
             }
 
             currentHoldTime += Time.deltaTime;
-            // Log($"Postęp: {currentHoldTime} / {maxHoldTime}"); // (Odkomentuj w razie potrzeby)
 
             if (currentHoldTime >= maxHoldTime)
             {
                 Log("SUKCES! Osiągnięto maxHoldTime.");
 
-                OnHoldComplete.Invoke();    // <-- ZACHOWAJ TO (dla logiki gry)
-                HoldProgressService.Hide(); // <-- DODAJ TO (dla UI)
+                OnHoldComplete.Invoke();
+                HoldProgressService.Hide();
 
+                currentPlayerInTrigger.OnActionFinished.Invoke(); // WYZWALANIE ZAKOŃCZENIA
                 holdWasCompleted = true;
             }
         }
@@ -123,8 +121,8 @@ public class HoldInteractor : MonoBehaviour
                 // Gracz właśnie puścił przycisk
                 Log("Gracz PUŚCIŁ przycisk przed czasem. ANULOWANIE.");
 
-                // OnHoldCancelled.Invoke(); // <-- ZAMIEŃ TO...
-                HoldProgressService.Hide(); // <-- ...NA TO.
+                HoldProgressService.Hide();
+                currentPlayerInTrigger.OnActionFinished.Invoke(); // WYZWALANIE ZAKOŃCZENIA (anulowanie)
 
                 isHolding = false;
                 currentHoldTime = 0f;

@@ -105,7 +105,7 @@ MonoBehaviour:
     mouseSprite: {fileID: 0}
     keyboardSprite: {fileID: 0}
   - name: Interaction
-    inputControlType: 20
+    inputControlType: 19
     mouse: 0
     key: 0
     controllerSprite: {fileID: 21300000, guid: f178146a44de340829e1c25c4ee4c072, type: 3}

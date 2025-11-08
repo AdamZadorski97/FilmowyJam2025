@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events; // Dodane dla UnityEvents
 
 /// <summary>
 /// Odpowiada za pole widzenia (FOV) nauczyciela.
@@ -23,26 +24,42 @@ public class TeacherFOV : MonoBehaviour
     [Tooltip("Warstwy (Layers), które blokują wzrok (np. ściany, meble).")]
     public LayerMask obstacleMask;
 
-    [Header("Status (Tylko do odczytu)")]
+    [Header("Eventy i Status")]
+    [Tooltip("Wywoływane, gdy gracz WŁAŚNIE wszedł w pole widzenia i jest widoczny.")]
+    public UnityEvent OnPlayerDetected;
+
+    [Tooltip("Wywoływane, gdy wykryty gracz WŁAŚNIE zniknął z pola widzenia.")]
+    public UnityEvent OnPlayerLost;
+
     [SerializeField]
     [Tooltip("Aktualnie wykryty i widoczny gracz. Pojawi się tutaj.")]
     private PlayerController detectedPlayer;
+    private bool wasPlayerDetectedLastFrame = false; // Nowa zmienna stanu
 
     // --- Publiczna właściwość (Property) ---
-    /// <summary>
-    /// Zwraca aktualnie widocznego gracza lub null, jeśli nikt nie jest widoczny.
-    /// </summary>
     public PlayerController DetectedPlayer => detectedPlayer;
 
     private void Update()
     {
-        // W każdej klatce uruchom logikę znajdowania gracza
         FindVisiblePlayer();
+
+        // --- Obsługa eventów detekcji ---
+        if (detectedPlayer != null && !wasPlayerDetectedLastFrame)
+        {
+            // Gracz WŁAŚNIE został wykryty
+            OnPlayerDetected.Invoke();
+            wasPlayerDetectedLastFrame = true;
+        }
+        else if (detectedPlayer == null && wasPlayerDetectedLastFrame)
+        {
+            // Gracz WŁAŚNIE zniknął
+            OnPlayerLost.Invoke();
+            wasPlayerDetectedLastFrame = false;
+        }
     }
 
     private void FindVisiblePlayer()
     {
-        // 1. Zresetuj cel. Domyślnie nikogo nie widzimy.
         detectedPlayer = null;
 
         // 2. Znajdź wszystkich graczy w zasięgu (kula)
@@ -61,22 +78,14 @@ public class TeacherFOV : MonoBehaviour
                 float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
 
                 // Wystrzel promień OD NAUCZYCIELA DO GRACZA
-                // Jeśli NIE trafi on w przeszkodę (obstacleMask)...
                 if (!Physics.Raycast(transform.position, dirToPlayer, distanceToPlayer, obstacleMask))
                 {
                     // ...to znaczy, że gracz jest widoczny!
                     detectedPlayer = playerCollider.GetComponent<PlayerController>();
-
-                    // Znaleźliśmy gracza, możemy przerwać pętlę i zakończyć funkcję
                     return;
                 }
-                // Jeśli raycast trafił w przeszkodę, ignorujemy tego gracza (pętla szuka dalej)
             }
-            // Jeśli gracz nie jest w kącie, ignorujemy go (pętla szuka dalej)
         }
-
-        // Jeśli pętla się zakończyła, a my nic nie zwróciliśmy,
-        // 'detectedPlayer' pozostanie 'null', co jest poprawne.
     }
 
     /// <summary>
@@ -84,10 +93,8 @@ public class TeacherFOV : MonoBehaviour
     /// </summary>
     private Vector3 DirFromAngle(float angleInDegrees)
     {
-        // Dodaj rotację samego obiektu do kąta
         angleInDegrees += transform.eulerAngles.y;
 
-        // Konwertuj kąt na wektor
         return new Vector3(
             Mathf.Sin(angleInDegrees * Mathf.Deg2Rad),
             0,
@@ -100,18 +107,16 @@ public class TeacherFOV : MonoBehaviour
     /// </summary>
     private void OnDrawGizmos()
     {
-        // Ustaw kolor Gizmo
         if (detectedPlayer != null)
         {
-            Gizmos.color = Color.red; // Czerwony, jeśli kogoś widzimy
-            Gizmos.DrawLine(transform.position, detectedPlayer.transform.position); // Linia do celu
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(transform.position, detectedPlayer.transform.position);
         }
         else
         {
-            Gizmos.color = Color.yellow; // Żółty, jeśli pole jest "czyste"
+            Gizmos.color = Color.yellow;
         }
 
-        // Narysuj krawędzie stożka widzenia
         Vector3 viewAngleA = DirFromAngle(-fovAngle / 2);
         Vector3 viewAngleB = DirFromAngle(fovAngle / 2);
 

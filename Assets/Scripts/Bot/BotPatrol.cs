@@ -1,10 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI; // Ważne dla NavMeshAgent
+using UnityEngine.AI;
 
 // NOWA KLASA: Definiuje właściwości każdego punktu patrolu.
-// [System.Serializable] sprawia, że możemy edytować ją w Inspektorze.
 [System.Serializable]
 public class PatrolWaypoint
 {
@@ -16,12 +15,14 @@ public class PatrolWaypoint
 
     [Tooltip("Kierunek (w stopniach, kąty Eulera), w którym bot ma patrzeć PODCZAS postoju.")]
     public Vector3 targetRotation;
+
+    [Tooltip("Nazwa parametru Triggera lub Boola w Animatorze do ustawienia podczas postoju (np. 'LookAround').")]
+    public string idleAnimationTrigger = ""; // <--- NOWE POLE STRING
 }
 
 /// <summary>
-/// Kontroluje bota AI, który patroluje listę punktów (waypoints)
-/// w określonej kolejności, w pętli.
-/// Potrafi czekać na punkcie i obracać się w określonym kierunku.
+/// Kontroluje bota AI, który patroluje listę punktów (waypoints).
+/// Reaguje na wykrycie gracza przez TeacherFOV i kontroluje animacje.
 /// </summary>
 [RequireComponent(typeof(NavMeshAgent))]
 public class BotPatrol : MonoBehaviour
@@ -29,6 +30,10 @@ public class BotPatrol : MonoBehaviour
     [Header("Referencje")]
     [SerializeField]
     private NavMeshAgent agent;
+    [SerializeField]
+    private Animator animator;
+    [SerializeField]
+    private TeacherFOV teacherFOV;
 
     [Header("Ustawienia Patrolu")]
     [SerializeField]
@@ -43,6 +48,9 @@ public class BotPatrol : MonoBehaviour
     [Tooltip("Jak szybko bot obraca się w docelowy kierunek podczas postoju.")]
     private float rotationSpeed = 5f;
 
+    // Stringi do wywoływania animacji
+    private const string ANIM_IS_WALKING = "IsWalking";
+
     // Zmienne wewnętrzne
     private int currentWaypointIndex = 0;
     private float waitTimer = 0f;
@@ -51,7 +59,8 @@ public class BotPatrol : MonoBehaviour
     private enum BotState
     {
         Moving,
-        Waiting
+        Waiting,
+        Alert
     }
 
     private void Awake()
@@ -60,65 +69,131 @@ public class BotPatrol : MonoBehaviour
         {
             agent = GetComponent<NavMeshAgent>();
         }
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
     }
 
     private void Start()
     {
-        if (agent == null)
+        if (agent == null || waypoints == null || waypoints.Count == 0)
         {
-            Debug.LogError($"[BotPatrol] Na {gameObject.name} brakuje NavMeshAgent!", this);
+            if (agent == null) Debug.LogError($"[BotPatrol] Brakuje NavMeshAgent!", this);
+            if (waypoints == null || waypoints.Count == 0) Debug.LogError($"[BotPatrol] Nie przypisano żadnych punktów!", this);
             enabled = false;
             return;
         }
 
-        if (waypoints == null || waypoints.Count == 0)
+        // SUBSKRYPCJA DO EVENTÓW Z TeacherFOV
+        if (teacherFOV != null)
         {
-            Debug.LogError($"[BotPatrol] Na {gameObject.name} nie przypisano żadnych punktów!", this);
-            enabled = false;
-            return;
+            teacherFOV.OnPlayerDetected.AddListener(OnPlayerDetected);
+            teacherFOV.OnPlayerLost.AddListener(OnPlayerLost);
         }
 
-        // Rozpocznij patrol
         StartMovingToNextWaypoint();
     }
+
+    // Metoda wywoływana przez event TeacherFOV.OnPlayerDetected
+    private void OnPlayerDetected()
+    {
+        if (currentState != BotState.Alert)
+        {
+            currentState = BotState.Alert;
+
+            // Zatrzymaj agenta i animację
+            if (agent.enabled)
+            {
+                agent.isStopped = true;
+            }
+
+            // Wyłącz animację chodu
+            SetAnimationBool(ANIM_IS_WALKING, false);
+            Debug.Log("[BotPatrol] GRACZ WYKRYTY! Przechodzę w stan Alert.");
+        }
+    }
+
+    // Metoda wywoływana, gdy gracz zniknie z FOV
+    private void OnPlayerLost()
+    {
+        if (currentState == BotState.Alert)
+        {
+            // Wznów patrol z miejsca, w którym się zatrzymał
+            if (agent.enabled)
+            {
+                agent.isStopped = false;
+            }
+
+            if (waypoints[currentWaypointIndex].waitTime > 0f && agent.remainingDistance < arrivalThreshold * 2f)
+            {
+                StartWaiting();
+            }
+            else
+            {
+                StartMovingToNextWaypoint();
+            }
+            Debug.Log("[BotPatrol] Gracz stracony. Wznawiam patrol.");
+        }
+    }
+
 
     private void Update()
     {
         if (waypoints.Count == 0) return;
 
-        // Prosta maszyna stanów (Moving / Waiting)
+        // Prosta maszyna stanów
         switch (currentState)
         {
             case BotState.Moving:
+                SetAnimationBool(ANIM_IS_WALKING, true); // <--- ANIMACJA WALK
                 HandleMovingState();
                 break;
             case BotState.Waiting:
+                SetAnimationBool(ANIM_IS_WALKING, false); // <--- ANIMACJA IDLE
                 HandleWaitingState();
+                break;
+            case BotState.Alert:
+                SetAnimationBool(ANIM_IS_WALKING, false); // <--- ANIMACJA IDLE (Alarm)
+                // W tym stanie nic nie robimy poza animacją
                 break;
         }
     }
 
     /// <summary>
-    /// Logika dla stanu, gdy bot jest W RUCHU.
-    /// Sprawdza, czy dotarł do celu.
+    /// Wywołuje parametr bool w Animatorze za pomocą stringa.
     /// </summary>
+    private void SetAnimationBool(string paramName, bool value)
+    {
+        if (animator != null)
+        {
+            animator.SetBool(paramName, value);
+        }
+    }
+
+    /// <summary>
+    /// Wywołuje Trigger w Animatorze za pomocą stringa.
+    /// </summary>
+    private void SetAnimationTrigger(string paramName)
+    {
+        if (animator != null && !string.IsNullOrEmpty(paramName))
+        {
+            animator.SetTrigger(paramName);
+        }
+    }
+
+
     private void HandleMovingState()
     {
         // Sprawdź, czy dotarliśmy do celu
         if (!agent.pathPending && agent.remainingDistance <= arrivalThreshold)
         {
-            // Dotarliśmy. Przejdź do stanu oczekiwania.
             StartWaiting();
         }
     }
 
-    /// <summary>
-    /// Logika dla stanu, gdy bot OCZEKUJE na punkcie.
-    /// Obraca się i odlicza czas.
-    /// </summary>
     private void HandleWaitingState()
     {
-        // 1. Obróć bota w kierunku zdefiniowanym w punkcie
         PatrolWaypoint currentWaypoint = waypoints[currentWaypointIndex];
         Quaternion targetLookRotation = Quaternion.Euler(currentWaypoint.targetRotation);
 
@@ -128,31 +203,39 @@ public class BotPatrol : MonoBehaviour
             rotationSpeed * Time.deltaTime
         );
 
-        // 2. Odliczaj czas
+        // Odliczaj czas
         waitTimer -= Time.deltaTime;
 
-        // 3. Jeśli czas minął, ruszaj do następnego punktu
+        // Jeśli czas minął, ruszaj do następnego punktu
         if (waitTimer <= 0f)
         {
-            // Znajdź następny indeks, zapętlając listę
+            // Resetuj trigger animacji customowej przed ruszeniem
+            if (!string.IsNullOrEmpty(currentWaypoint.idleAnimationTrigger))
+            {
+                animator.ResetTrigger(currentWaypoint.idleAnimationTrigger);
+            }
+
             currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
             StartMovingToNextWaypoint();
         }
     }
 
     /// <summary>
-    /// Przełącza bota w stan OCZEKIWANIA.
+    /// Przełącza bota w stan OCZEKIWANIA i wywołuje animację z punktu.
     /// </summary>
     private void StartWaiting()
     {
         currentState = BotState.Waiting;
 
-        // Pobierz czas oczekiwania z aktualnego punktu
+        // Ustaw czas oczekiwania
         waitTimer = waypoints[currentWaypointIndex].waitTime;
 
-        // WAŻNE: Wyłącz automatyczną rotację agenta.
-        // Od teraz my kontrolujemy rotację bota.
+        // Dezaktywuj automatyczną rotację agenta (NavMeshAgent) i zatrzymaj go
         agent.updateRotation = false;
+        agent.isStopped = true;
+
+        // Wywołaj animację zdefiniowaną w punkcie (jako Trigger lub Bool)
+        SetAnimationTrigger(waypoints[currentWaypointIndex].idleAnimationTrigger);
     }
 
     /// <summary>
@@ -162,9 +245,9 @@ public class BotPatrol : MonoBehaviour
     {
         currentState = BotState.Moving;
 
-        // WAŻNE: Włącz z powrotem automatyczną rotację agenta.
-        // Agent będzie teraz sam obracał bota w kierunku marszu.
+        // Aktywuj automatyczną rotację agenta i wznów ruch
         agent.updateRotation = true;
+        agent.isStopped = false;
 
         // Ustaw cel w NavMeshAgent
         PatrolWaypoint targetWaypoint = waypoints[currentWaypointIndex];
@@ -188,6 +271,7 @@ public class BotPatrol : MonoBehaviour
             return;
         }
 
+        // Rysuj punkty i połączenia
         for (int i = 0; i < waypoints.Count; i++)
         {
             PatrolWaypoint wp = waypoints[i];
@@ -195,17 +279,17 @@ public class BotPatrol : MonoBehaviour
             // Jeśli punkt istnieje
             if (wp.point != null)
             {
-                // Rysuj sferę
+                // Rysuj sferę punktu
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawWireSphere(wp.point.position, 0.5f);
 
-                // Rysuj linię pokazującą kierunek patrzenia (NOWA FUNKCJA)
+                // Rysuj linię pokazującą kierunek patrzenia podczas postoju
                 Quaternion lookRot = Quaternion.Euler(wp.targetRotation);
-                Vector3 direction = lookRot * Vector3.forward; // Konwertuj rotację na wektor
+                Vector3 direction = lookRot * Vector3.forward;
                 Gizmos.color = Color.red;
-                Gizmos.DrawRay(wp.point.position, direction * 2f); // Czerwona linia 2m
+                Gizmos.DrawRay(wp.point.position + Vector3.up * 0.1f, direction * 2f);
 
-                // Rysuj linię do następnego punktu
+                // Rysuj linię do następnego punktu (kolejność patrolu)
                 Gizmos.color = Color.white;
                 int nextIndex = (i + 1) % waypoints.Count;
                 Transform nextPoint = waypoints[nextIndex].point;
@@ -214,6 +298,19 @@ public class BotPatrol : MonoBehaviour
                 {
                     Gizmos.DrawLine(wp.point.position, nextPoint.position);
                 }
+            }
+        }
+
+        // Rysuj aktualną trasę NavMeshAgent (tylko w trybie Play)
+        if (Application.isPlaying && agent != null && agent.hasPath)
+        {
+            Gizmos.color = Color.blue;
+            Vector3 lastCorner = transform.position;
+            foreach (var corner in agent.path.corners)
+            {
+                Gizmos.DrawLine(lastCorner, corner);
+                Gizmos.DrawSphere(corner, 0.1f);
+                lastCorner = corner;
             }
         }
     }
