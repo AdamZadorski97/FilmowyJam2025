@@ -64,7 +64,7 @@ public class InputController : MonoBehaviour
             }
         }
     }
-    public void Vibrate(float intencity,  InputActions actions, float time)
+    public void Vibrate(float intencity, InputActions actions, float time)
     {
         actions.Device.Vibrate(intencity, intencity);
         StartCoroutine(OnParticleSystemStopped(actions, time));
@@ -125,6 +125,12 @@ public class InputActions : PlayerActionSet
     public PlayerTwoAxisAction moveAction;
     public PlayerTwoAxisAction lookAction;
 
+    // NOWE AKCJE
+    public PlayerAction runAction;
+    public PlayerAction sneakAction;
+    public PlayerAction punchAction;
+    public PlayerAction kickAction;
+
     public PlayerAction lookLeftAction;
     public PlayerAction lookRightAction;
     public PlayerAction lookUpAction;
@@ -148,6 +154,7 @@ public class InputActions : PlayerActionSet
         menuUpAction = CreatePlayerAction("Menu Up");
         menuDownAction = CreatePlayerAction("Menu Down");
         menuEnterAction = CreatePlayerAction("Menu Enter");
+
         //Movement
         goLeftAction = CreatePlayerAction("Go Left");
         goRightAction = CreatePlayerAction("Go Right");
@@ -156,6 +163,13 @@ public class InputActions : PlayerActionSet
         jumpAction = CreatePlayerAction("Jump");
         crowlAction = CreatePlayerAction("Crouch");
         interactionAction = CreatePlayerAction("Interaction");
+
+        // NOWE AKCJE RUCHU I WALKI
+        runAction = CreatePlayerAction("Run");
+        sneakAction = CreatePlayerAction("Sneak");
+        punchAction = CreatePlayerAction("Punch");
+        kickAction = CreatePlayerAction("Kick");
+
         //Look
         lookLeftAction = CreatePlayerAction("Look Left");
         lookRightAction = CreatePlayerAction("Look Right");
@@ -222,10 +236,21 @@ public class InputActions : PlayerActionSet
         playerActions.interactionAction.AddDefaultBinding(bindingsScriptable.GetBinding("Interaction").key);
         playerActions.interactionAction.AddDefaultBinding(bindingsScriptable.GetBinding("Interaction").inputControlType);
 
+        // NOWE BINDINGI
+        playerActions.runAction.AddDefaultBinding(bindingsScriptable.GetBinding("Run").key);
+        playerActions.runAction.AddDefaultBinding(bindingsScriptable.GetBinding("Run").inputControlType);
+
+        playerActions.sneakAction.AddDefaultBinding(bindingsScriptable.GetBinding("Sneak").key);
+        playerActions.sneakAction.AddDefaultBinding(bindingsScriptable.GetBinding("Sneak").inputControlType);
+
+        playerActions.punchAction.AddDefaultBinding(bindingsScriptable.GetBinding("Punch").key);
+        playerActions.punchAction.AddDefaultBinding(bindingsScriptable.GetBinding("Punch").inputControlType);
+
+        playerActions.kickAction.AddDefaultBinding(bindingsScriptable.GetBinding("Kick").key);
+        playerActions.kickAction.AddDefaultBinding(bindingsScriptable.GetBinding("Kick").inputControlType);
+
         playerActions.moveAction = playerActions.CreateTwoAxisPlayerAction(playerActions.goLeftAction, playerActions.goRightAction, playerActions.goDownAction, playerActions.goUpAction);
         playerActions.lookAction = playerActions.CreateTwoAxisPlayerAction(playerActions.lookLeftAction, playerActions.lookRightAction, playerActions.lookDownAction, playerActions.lookUpAction);
         return playerActions;
     }
 }
-
-
