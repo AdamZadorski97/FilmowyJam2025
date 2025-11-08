@@ -4,36 +4,29 @@ using UnityEngine;
 using UnityEngine.Events;
 public class InteractorController : MonoBehaviour
 {
-    public UnityEvent OnInteractEvet;
+    public UnityEvent OnTriggerEnterEvent;
+    public UnityEvent OnTriggerExitEvent;
+    public UnityEvent OnInteractEvent;
     public PlayerController playerController;
     public bool isOnlyForMan;
 
     public void OnInteract(PlayerController _playerController)
     {
         playerController = _playerController;
-        OnInteractEvet.Invoke();
+        OnInteractEvent.Invoke();
     }
 
-
+    
 
 
 
 
     private void OnTriggerEnter(Collider other)
     {
-        
-
-        if(other != null && other.GetComponent<PlayerController>() && other.GetComponent<PlayerController>())
+        if(other != null && other.GetComponent<PlayerController>())
         {
-            if (isOnlyForMan && other.GetComponent<PlayerController>().isMan)
-            {
-                other.GetComponent<PlayerController>().tempInteractorController = this;
-            }
-            else if(!isOnlyForMan)
-            {
-                other.GetComponent<PlayerController>().tempInteractorController = this;
-            }
-
+            other.GetComponent<PlayerController>().tempInteractorController = this;
+            OnTriggerEnterEvent.Invoke();
         }
     }
 
@@ -41,16 +34,9 @@ public class InteractorController : MonoBehaviour
     {
         if (other != null && other.GetComponent<PlayerController>())
         {
-            if (isOnlyForMan && other.GetComponent<PlayerController>().isMan)
-            {
+        
                 other.GetComponent<PlayerController>().tempInteractorController = null;
-            }
-            else if (!isOnlyForMan)
-            {
-                other.GetComponent<PlayerController>().tempInteractorController = null;
-            }
+            OnTriggerExitEvent.Invoke();
         }
     }
-
-
 }

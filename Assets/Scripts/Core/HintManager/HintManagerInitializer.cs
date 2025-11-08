@@ -17,6 +17,17 @@ public class HintManagerInitializer : MonoBehaviour
     {
         InputHintController.Show(actionName, message);
     }
+
+   public void SpawnHint(string actionName, string message)
+    {
+        InputHintController.Show(actionName, message);
+    }
+    public void HideHint()
+    {
+        InputHintController.Hide();
+    }
+
+
     [Button]
     void HideTest()
     {
