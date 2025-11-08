@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7d635e7ca53b039498b608dc16ae2b97
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Models/1sponza (2)/Materials/column_c.mat
+  uploadId: 813472

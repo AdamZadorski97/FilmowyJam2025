@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 53c1affadf7ceac4e89ab34c62bf7c1d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Resources/PostProcess/ASVGF/ASVGF.cs
+  uploadId: 813472

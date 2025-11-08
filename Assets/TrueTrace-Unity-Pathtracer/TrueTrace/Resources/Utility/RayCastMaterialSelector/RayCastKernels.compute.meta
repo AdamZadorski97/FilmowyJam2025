@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a8f5ddffbe271874ebb478f6f7643475
+ComputeShaderImporter:
+  externalObjects: {}
+  preprocessorOverride: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Resources/Utility/RayCastMaterialSelector/RayCastKernels.compute
+  uploadId: 813472

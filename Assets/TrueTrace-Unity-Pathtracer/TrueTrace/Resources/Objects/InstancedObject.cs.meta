@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: b7f59873a81631a4eabb2b0d3b228946
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Resources/Objects/InstancedObject.cs
+  uploadId: 813472

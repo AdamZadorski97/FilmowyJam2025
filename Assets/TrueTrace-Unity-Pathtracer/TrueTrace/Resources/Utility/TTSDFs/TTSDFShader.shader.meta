@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: eb7fd76a4d67a9542b324c9861b9cc66
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  preprocessorOverride: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Resources/Utility/TTSDFs/TTSDFShader.shader
+  uploadId: 813472

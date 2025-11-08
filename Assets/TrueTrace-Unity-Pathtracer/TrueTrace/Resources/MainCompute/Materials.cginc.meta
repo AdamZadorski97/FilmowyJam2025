@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1b8265fd088da0f48813efd8ddce306f
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Resources/MainCompute/Materials.cginc
+  uploadId: 813472

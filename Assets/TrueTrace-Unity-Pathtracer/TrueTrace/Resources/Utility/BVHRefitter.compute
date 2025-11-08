@@ -1,0 +1,759 @@
+#define KernelRatio 256
+#include "../GlobalDefines.cginc"
+#include "../MainCompute/CommonStructs.cginc"
+#pragma warning( disable : 3556)
+
+#pragma kernel Construct
+
+StructuredBuffer<int> CWBVHIndices;
+ByteAddressBuffer bufVertices;
+
+ByteAddressBuffer bufIndexes;
+
+uint gVertexCount;
+int SkinnedOffset;
+
+RWStructuredBuffer<CudaTriangleC> SkinnedTriBuffer;
+
+int VertOffset;
+
+float4x4 Transform;
+float4x4 Transform2;
+
+float3 Offset;
+
+float3 Scale;
+
+float3 transform_position(float4x4 mat, float3 position)
+{
+    return float3(
+        mat[0][0] * position.x + mat[0][1] * position.y + mat[0][2] * position.z + mat[0][3],
+        mat[1][0] * position.x + mat[1][1] * position.y + mat[1][2] * position.z + mat[1][3],
+        mat[2][0] * position.x + mat[2][1] * position.y + mat[2][2] * position.z + mat[2][3]);
+}
+float3 transform_direction(float4x4 mat, float3 direction)
+{
+    return float3(
+        abs(mat[0][0]) * direction.x + abs(mat[0][1]) * direction.y + abs(mat[0][2]) * direction.z,
+        abs(mat[1][0]) * direction.x + abs(mat[1][1]) * direction.y + abs(mat[1][2]) * direction.z,
+        abs(mat[2][0]) * direction.x + abs(mat[2][1]) * direction.y + abs(mat[2][2]) * direction.z
+    );
+}
+
+inline float4x4 inverse(float4x4 m) {
+    float n11 = m[0][0], n12 = m[1][0], n13 = m[2][0], n14 = m[3][0];
+    float n21 = m[0][1], n22 = m[1][1], n23 = m[2][1], n24 = m[3][1];
+    float n31 = m[0][2], n32 = m[1][2], n33 = m[2][2], n34 = m[3][2];
+    float n41 = m[0][3], n42 = m[1][3], n43 = m[2][3], n44 = m[3][3];
+
+    float t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44;
+    float t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44;
+    float t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44;
+    float t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
+
+    float det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
+    float idet = 1.0f / det;
+
+    float4x4 ret;
+
+    ret[0][0] = t11 * idet;
+    ret[0][1] = (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) * idet;
+    ret[0][2] = (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) * idet;
+    ret[0][3] = (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) * idet;
+
+    ret[1][0] = t12 * idet;
+    ret[1][1] = (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) * idet;
+    ret[1][2] = (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) * idet;
+    ret[1][3] = (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) * idet;
+
+    ret[2][0] = t13 * idet;
+    ret[2][1] = (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) * idet;
+    ret[2][2] = (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) * idet;
+    ret[2][3] = (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) * idet;
+
+    ret[3][0] = t14 * idet;
+    ret[3][1] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * idet;
+    ret[3][2] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * idet;
+    ret[3][3] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * idet;
+
+    return ret;
+}
+
+
+struct BoundingBox {
+	float3 BBMax;
+	float3 BBMin;
+};
+RWStructuredBuffer<BoundingBox> Boxs;
+
+StructuredBuffer<CudaTriangleA> CudaTriArrayINA;
+StructuredBuffer<CudaTriangleB> CudaTriArrayINB;
+RWStructuredBuffer<CudaTriangleA> CudaTriArrayA;
+RWStructuredBuffer<CudaTriangleB> CudaTriArrayB;
+RWStructuredBuffer<BVHNode8Data> AggNodes;
+
+inline uint octahedral_32(float3 nor) {
+	float oct = 1.0f / (abs(nor.x) + abs(nor.y) + abs(nor.z));
+	float t = saturate(-nor.z);
+	nor.xy = (nor.xy + (nor.xy > 0.0f ? t : -t)) * oct;
+    uint2 d = uint2(round(32767.5 + nor.xy*32767.5));  
+    return d.x|(d.y<<16u);
+}
+
+int Stride;
+int TriBuffOffset;
+
+groupshared float3 Pos[KernelRatio * 3];
+groupshared uint Norm[KernelRatio * 3];
+
+[numthreads(KernelRatio, 3, 1)]
+void Construct(uint3 id : SV_DispatchThreadID, uint3 gt : SV_GroupThreadID)
+{
+	const bool ValidRunning = id.x < gVertexCount;
+	gt.x *= 3;
+	Pos[gt.x + gt.y] = 0;
+	Norm[gt.x + gt.y] = 0;
+	[branch]if(ValidRunning) {
+		const uint vidx = bufIndexes.Load(id.x * 12 + gt.y * 4) * Stride;
+		Pos[gt.x + gt.y] = mul(Transform, float4(asfloat(bufVertices.Load3((vidx) << 2)),1)).xyz;
+		Norm[gt.x + gt.y] = octahedral_32(normalize(mul((float3x3)Transform, asfloat(bufVertices.Load3((vidx + 3) << 2)))));
+		id.x = CWBVHIndices[VertOffset + id.x];
+	}
+	GroupMemoryBarrierWithGroupSync();
+	if(ValidRunning) {
+		[branch]if(gt.y == 1) {
+			float3 BBMax = max(max(Pos[gt.x], Pos[gt.x + 1]), Pos[gt.x + 2]);
+			float3 BBMin = min(min(Pos[gt.x], Pos[gt.x + 1]), Pos[gt.x + 2]);
+			[unroll] for (int i2 = 0; i2 < 3; i2++) {
+				if (BBMax[i2] - BBMin[i2] < 0.00001f) {
+					BBMin[i2] -= 0.00001f;
+					BBMax[i2] += 0.00001f;
+				}
+			}
+
+			Boxs[id.x].BBMax = BBMax;
+			Boxs[id.x].BBMin = BBMin;
+		} else if(gt.y == 0) {
+			SkinnedTriBuffer[id.x + SkinnedOffset].pos0 = CudaTriArrayA[id.x + TriBuffOffset].pos0;
+			SkinnedTriBuffer[id.x + SkinnedOffset].posedge1 = CudaTriArrayA[id.x + TriBuffOffset].posedge1;
+			SkinnedTriBuffer[id.x + SkinnedOffset].posedge2 = CudaTriArrayA[id.x + TriBuffOffset].posedge2;
+			CudaTriArrayA[id.x + TriBuffOffset].pos0 = Pos[gt.x];
+			CudaTriArrayA[id.x + TriBuffOffset].posedge1 = Pos[gt.x + 2] - Pos[gt.x];
+			CudaTriArrayA[id.x + TriBuffOffset].posedge2 = Pos[gt.x + 1] - Pos[gt.x];
+		} else if(gt.y == 2) {
+			CudaTriArrayB[id.x + TriBuffOffset].norms = uint3(Norm[gt.x], Norm[gt.x + 2], Norm[gt.x + 1]);
+		}
+	}
+
+
+
+}
+int LightTriBuffOffset;
+
+
+struct NodeIndexPairData {
+	float3 BBMax;//24
+	float3 BBMin;//36
+	int BVHNode;//8
+	int InNodeOffset;//40
+};
+
+RWStructuredBuffer<NodeIndexPairData> AllNodes;
+
+
+
+#pragma kernel RefitLayer
+
+
+
+struct Layer {
+	int Children[8];
+};
+StructuredBuffer<Layer> ReverseStack;
+
+uint NodeCount;
+int NodeOffset;
+
+RWStructuredBuffer<BoundingBox> NodeTotalBounds;
+
+inline uint GetNodeMeta(uint2 meta, int i) {
+	return (meta[i >= 4] >> ((i % 4) * 8)) & 0xFF;
+} 
+
+
+StructuredBuffer<int> WorkingBuffer;
+[numthreads(128, 1, 1)]
+void RefitLayer(uint3 id : SV_DispatchThreadID)
+{
+	if (id.x >= NodeCount)
+		return;
+	id.x = WorkingBuffer[id.x];
+	float3 RunningMax = -99999999.0f;//AllNodes[id.x].BBMax;
+	float3 RunningMin = 99999999.0f;//AllNodes[id.x].BBMin;
+	float3 BBMax[8];
+	float3 BBMin[8];
+	uint PopulatedSlots = 0;
+
+	BVHNode8Data RootCWBVHNode = AggNodes[id.x + NodeOffset];
+	int i;
+	const uint4 NodeTotal = RootCWBVHNode.nodes[1];
+	[unroll]for(i = 0; i < 8; i++) {
+		BBMax[i] = -999999.0f;
+		BBMin[i] = 999999.0f;
+		uint NodeMeta = GetNodeMeta(NodeTotal.zw, i);
+		int NumBits = countbits(NodeMeta >> 5);
+		if(NumBits == 0) continue;
+		PopulatedSlots |= 1 << i;
+		int RelevantOffset = NodeMeta & 0x1F;
+		[branch]if(RelevantOffset < 24) {
+			int Start = (RelevantOffset + NodeTotal.y);
+			[unroll]for(int i2 = 0; i2 < NumBits; i2++) {
+				int Tri = Start + i2;
+				BBMax[i] = max(BBMax[i], Boxs[Tri].BBMax);
+				BBMin[i] = min(BBMin[i], Boxs[Tri].BBMin);
+			}
+		} else {
+            int child_index = NodeTotal.x + RelevantOffset - 24;
+			BBMax[i] = NodeTotalBounds[child_index].BBMax;
+			BBMin[i] = NodeTotalBounds[child_index].BBMin;
+		}
+	}
+
+	[unroll]for(i = 0; i < 8; i++) {
+		if(!((PopulatedSlots >> i) & 0x1)) continue;
+		RunningMax = max(RunningMax, BBMax[i]);
+		RunningMin = min(RunningMin, BBMin[i]);
+	}
+
+
+
+	NodeTotalBounds[id.x].BBMax = RunningMax;
+	NodeTotalBounds[id.x].BBMin = RunningMin;
+	
+	float3 e = pow(2, ceil(log2((RunningMax - RunningMin) * 0.003921569f)));
+	float3 p = RunningMin;
+
+
+	RootCWBVHNode.nodes[0] = uint4(asuint(p.x),
+								asuint(p.y),
+								asuint(p.z),
+								((asuint(e.x) >> 23) | ((asuint(e.y) >> 23) << 8) | ((asuint(e.z) >> 23) << 16) | (RootCWBVHNode.nodes[0].w & 0xFF000000)));
+
+	uint4 NodeA = 0;
+	uint4 NodeB = 0;
+	uint4 NodeC = 0;
+
+
+	e = 1.0f / e;
+	[unroll]
+	for(i = 0; i < 8; i++) {
+		BBMax[i] = ceil((BBMax[i] - p) * e);
+		BBMin[i] = floor((BBMin[i] - p) * e);
+	}
+
+	uint3 Max;
+	uint3 Min;
+
+	[unroll]
+	for(i = 0; i < 4; i++) {
+		if(!((PopulatedSlots >> i) & 0x1)) continue;
+
+		Max = (BBMax[i]);
+		Min = (BBMin[i]);
+		int i2 = i * 8;
+		NodeA.x |= (Min.x & 0xFF) << i2;
+		NodeA.y |= (Max.x & 0xFF) << i2;
+		NodeB.x |= (Min.y & 0xFF) << i2;
+		NodeB.y |= (Max.y & 0xFF) << i2;
+		NodeC.x |= (Min.z & 0xFF) << i2;
+		NodeC.y |= (Max.z & 0xFF) << i2;
+	}
+
+	[unroll]
+	for(i = 4; i < 8; i++) {
+		if(!((PopulatedSlots >> i) & 0x1)) continue;
+
+		Max = (BBMax[i]);
+		Min = (BBMin[i]);
+		int i2 = i * 8;
+		NodeA.z |= (Min.x & 0xFF) << i2;
+		NodeA.w |= (Max.x & 0xFF) << i2;
+		NodeB.z |= (Min.y & 0xFF) << i2;
+		NodeB.w |= (Max.y & 0xFF) << i2;
+		NodeC.z |= (Min.z & 0xFF) << i2;
+		NodeC.w |= (Max.z & 0xFF) << i2;
+	}
+
+	RootCWBVHNode.nodes[2] = NodeA;
+	RootCWBVHNode.nodes[3] = NodeB;
+	RootCWBVHNode.nodes[4] = NodeC;
+
+
+	AggNodes[id.x + NodeOffset] = RootCWBVHNode;
+
+}
+#pragma kernel RefitBVHLayer
+StructuredBuffer<int> TLASCWBVHIndices;
+[numthreads(128, 1, 1)]
+void RefitBVHLayer(uint3 id : SV_DispatchThreadID)
+{
+	if (id.x >= NodeCount)
+		return;
+	id.x = WorkingBuffer[id.x];
+	float3 RunningMax = -99999999.0f;//AllNodes[id.x].BBMax;
+	float3 RunningMin = 99999999.0f;//AllNodes[id.x].BBMin;
+	float3 BBMax[8];
+	float3 BBMin[8];
+	uint PopulatedSlots = 0;
+
+	BVHNode8Data RootCWBVHNode = AggNodes[id.x];
+	int i;
+	const uint4 NodeTotal = RootCWBVHNode.nodes[1];
+	[unroll]for(i = 0; i < 8; i++) {
+		BBMax[i] = -999999.0f;
+		BBMin[i] = 999999.0f;
+		uint NodeMeta = GetNodeMeta(NodeTotal.zw, i);
+		int NumBits = countbits(NodeMeta >> 5);
+		if(NumBits == 0) continue;
+		PopulatedSlots |= 1 << i;
+		int RelevantOffset = NodeMeta & 0x1F;
+		[branch]if(RelevantOffset < 24) {
+			int Start = (RelevantOffset + NodeTotal.y);
+			[unroll]for(int i2 = 0; i2 < NumBits; i2++) {
+				int Tri = Start + i2;
+		        float3 center = transform_position(inverse(_MeshData[TLASCWBVHIndices[Tri]].W2L), (Boxs[TLASCWBVHIndices[Tri]].BBMax + Boxs[TLASCWBVHIndices[Tri]].BBMin) / 2.0f);
+		        float3 extent = transform_direction(inverse(_MeshData[TLASCWBVHIndices[Tri]].W2L), (Boxs[TLASCWBVHIndices[Tri]].BBMax - Boxs[TLASCWBVHIndices[Tri]].BBMin) / 2.0f);
+
+				BBMax[i] = max(BBMax[i], center + extent);
+				BBMin[i] = min(BBMin[i], center - extent);
+			}
+		} else {
+            int child_index = NodeTotal.x + RelevantOffset - 24;
+			BBMax[i] = NodeTotalBounds[child_index].BBMax;
+			BBMin[i] = NodeTotalBounds[child_index].BBMin;
+		}
+	}
+
+	[unroll]for(i = 0; i < 8; i++) {
+		if(!((PopulatedSlots >> i) & 0x1)) continue;
+		RunningMax = max(RunningMax, BBMax[i]);
+		RunningMin = min(RunningMin, BBMin[i]);
+	}
+
+
+
+	NodeTotalBounds[id.x].BBMax = RunningMax;
+	NodeTotalBounds[id.x].BBMin = RunningMin;
+
+	float3 e = pow(2, ceil(log2((RunningMax - RunningMin) * 0.003921569f)));
+	float3 p = RunningMin;
+
+
+	RootCWBVHNode.nodes[0] = uint4(asuint(p.x),
+								asuint(p.y),
+								asuint(p.z),
+								((asuint(e.x) >> 23) | ((asuint(e.y) >> 23) << 8) | ((asuint(e.z) >> 23) << 16) | (RootCWBVHNode.nodes[0].w & 0xFF000000)));
+
+	uint4 NodeA = 0;
+	uint4 NodeB = 0;
+	uint4 NodeC = 0;
+
+
+	e = 1.0f / e;
+	[unroll]
+	for(i = 0; i < 8; i++) {
+		BBMax[i] = ceil((BBMax[i] - p) * e);
+		BBMin[i] = floor((BBMin[i] - p) * e);
+	}
+
+	uint3 Max;
+	uint3 Min;
+
+	[unroll]
+	for(i = 0; i < 4; i++) {
+		if(!((PopulatedSlots >> i) & 0x1)) continue;
+
+		Max = (BBMax[i]);
+		Min = (BBMin[i]);
+		int i2 = i * 8;
+		NodeA.x |= (Min.x & 0xFF) << i2;
+		NodeA.y |= (Max.x & 0xFF) << i2;
+		NodeB.x |= (Min.y & 0xFF) << i2;
+		NodeB.y |= (Max.y & 0xFF) << i2;
+		NodeC.x |= (Min.z & 0xFF) << i2;
+		NodeC.y |= (Max.z & 0xFF) << i2;
+	}
+
+	[unroll]
+	for(i = 4; i < 8; i++) {
+		if(!((PopulatedSlots >> i) & 0x1)) continue;
+
+		Max = (BBMax[i]);
+		Min = (BBMin[i]);
+		int i2 = i * 8;
+		NodeA.z |= (Min.x & 0xFF) << i2;
+		NodeA.w |= (Max.x & 0xFF) << i2;
+		NodeB.z |= (Min.y & 0xFF) << i2;
+		NodeB.w |= (Max.y & 0xFF) << i2;
+		NodeC.z |= (Min.z & 0xFF) << i2;
+		NodeC.w |= (Max.z & 0xFF) << i2;
+	}
+
+	RootCWBVHNode.nodes[2] = NodeA;
+	RootCWBVHNode.nodes[3] = NodeB;
+	RootCWBVHNode.nodes[4] = NodeC;
+
+
+	AggNodes[id.x] = RootCWBVHNode;
+
+
+
+
+}
+
+#pragma kernel UpdateGlobalBufferAABBKernel
+int TLASBoxesInput;
+[numthreads(1, 1, 1)]
+void UpdateGlobalBufferAABBKernel(uint3 id : SV_DispatchThreadID)
+{
+	Boxs[TLASBoxesInput].BBMax = NodeTotalBounds[0].BBMax;
+	Boxs[TLASBoxesInput].BBMin = NodeTotalBounds[0].BBMin;
+}
+
+// ---------------------------------------------------------------------- //
+//Light BVH refits
+
+#pragma kernel TLASLightBVHRefitKernel
+
+
+
+inline float3 i_octahedral_32( uint data ) {
+    uint2 iv = uint2( data, data>>16u ) & 65535u; 
+    float2 v = iv/32767.5f - 1.0f;
+    float3 nor = float3(v, 1.0f - abs(v.x) - abs(v.y)); // Rune Stubbe's version,
+    float t = max(-nor.z,0.0);                     // much faster than original
+    nor.xy += (nor.xy>=0.0)?-t:t;                     // implementation of this
+    return normalize( nor );
+}
+
+
+
+#ifdef UseSGTree
+	RWStructuredBuffer<GaussianTreeNode> LightNodesWrite;
+#else
+	RWStructuredBuffer<LightBVHData> LightNodesWrite;
+#endif
+StructuredBuffer<int> WorkingSet;
+int SetCount;
+int ObjectOffset;
+
+
+inline float luminance(const float3 a) {
+    return dot(float3(0.299f, 0.587f, 0.114f), a);
+}
+
+
+
+float AngleBetween(float3 v1, float3 v2) {
+    if(dot(v1, v2) < 0) return 3.14159f - 2.0f * asin(length(v1 + v2) / 2.0f);
+    else return 2.0f * asin(length(v2 - v1) / 2.0f);
+}
+
+inline void RotateRodrigues(inout float3 v, float angle, float3 axis) {
+    float axisLenSq = dot(axis, axis);
+    if (axisLenSq == 0) return;
+
+    float invLen = 1.f / sqrt(axisLenSq);
+    axis = axis * invLen;
+
+    float Sin, Cos;
+    sincos(angle, Sin, Cos);
+
+    float Dot = dot(axis, v);
+    float3 Cross = cross(axis, v);
+
+    v = v * Cos + Cross * Sin + axis * Dot * (1.f - Cos);
+}
+
+float GetCosThetaO(uint cosTheta) {
+    return (2.0f * ((float)(cosTheta & 0x0000FFFF) / 32767.0f) - 1.0f);
+}
+float GetCosThetaE(uint cosTheta) {
+    return (2.0f * ((float)(cosTheta >> 16) / 32767.0f) - 1.0f);
+}
+uint CompCosTheta(float cosTheta_o, float cosTheta_e) {
+    return (uint)floor(32767.0f * ((cosTheta_o + 1.0f) / 2.0f)) | ((uint)floor(32767.0f * ((cosTheta_e + 1.0f) / 2.0f)) << 16);
+}
+
+inline float4 DoCone(float4 A, float4 B) {
+    if(all(A.xyz == 0)) return B;
+    if(all(B.xyz == 0)) return A;
+    
+    float theta_a = acos(A.w);
+    float theta_b = acos(B.w);
+    float theta_d = AngleBetween(A.xyz, B.xyz);
+    if(min(theta_d + theta_b, 3.14159f) <= theta_a) return A;
+    if(min(theta_d + theta_a, 3.14159f) <= theta_b) return B;
+
+    float theta_o = (theta_a + theta_d + theta_b) / 2.0f;
+    if(theta_o >= 3.14159f) return float4(0,0,0,-1);
+
+    float theta_r = theta_o - theta_a;
+    float3 wr = cross(A.xyz, B.xyz);
+    if(dot(wr, wr) == 0) return float4(0,0,0,-1);
+    RotateRodrigues(A.xyz, theta_r, wr);
+    A.w = cos(theta_o);
+    return A;
+}
+
+
+inline LightBVHData Union(const LightBVHData A, const LightBVHData B, int Left) {
+    float4 Cone = DoCone(float4(i_octahedral_32(A.w), GetCosThetaO(A.cosTheta_oe)), float4(i_octahedral_32(B.w), GetCosThetaO(B.cosTheta_oe)));
+    float cosTheta_o = Cone.w;
+    float cosTheta_e = min(GetCosThetaE(A.cosTheta_oe), GetCosThetaE(B.cosTheta_oe));
+    LightBVHData Dat = {max(A.BBMax, B.BBMax), min(A.BBMin, B.BBMin), octahedral_32(Cone.xyz), A.phi + B.phi, CompCosTheta(cosTheta_o, cosTheta_e), Left};
+    return Dat;
+}
+
+
+inline float expm1_over_x(const float x)
+{
+	const float u = exp(x);
+
+	if (u == 1.0)
+	{
+		return 1.0;
+	}
+
+	const float y = u - 1.0;
+
+	if (abs(x) < 1.0)
+	{
+		return y / log(u);
+	}
+
+	return y / x;
+}
+
+
+inline float SGIntegral(const float sharpness)
+{
+	return 4.0 * 3.14159f * expm1_over_x(-2.0 * sharpness);
+}
+
+
+float VMFAxisLengthToSharpness(float axisLength)
+{
+    return axisLength * (3.0f - axisLength * axisLength) / (1.0f - axisLength * axisLength);
+}
+
+// Inverse of VMFAxisLengthToSharpness.
+float VMFSharpnessToAxisLength(float sharpness)
+{
+    // Solve x^3 - sx^2 - 3x + s = 0, where s = sharpness.
+    // For x in [0, 1] and s in [0, infty), this equation has only a single solution.
+    // [Xu and Wang 2015 "Realtime Rendering Glossy to Glossy Reflections in Screen Space"]
+    // We solve this cubic equation in a numerically stable manner.
+    // [Peters, C. 2016 "How to solve a cubic equation, revisited" https://momentsingraphics.de/CubicRoots.html]
+    float a = sharpness / 3.0f;
+    float b = a * a * a;
+    float c = sqrt(1.0f + 3.0f * (a * a) * (1.0f + a * a));
+    float theta = atan2(c, b) / 3.0f;
+    float d = -2.0f * sin(3.14159f / 6.0f - theta); // = sin(theta) * sqrt(3) - cos(theta).
+    return (sharpness > 33554432.0f) ? 1.0f : sqrt(1.0f + a * a) * d + a;
+}
+
+
+
+inline GaussianTreeNode UnionSG(const GaussianTreeNode LeftNode, const GaussianTreeNode RightNode, int Left) {
+   	if(LeftNode.intensity == 0) return RightNode;
+   	if(RightNode.intensity == 0) return LeftNode;    
+    float phi_left = LeftNode.intensity;    
+    float phi_right = RightNode.intensity;    
+    float w_left = phi_left / (phi_left + phi_right);
+    float w_right = phi_right / (phi_left + phi_right);
+    
+    float3 V = w_left * i_octahedral_32(LeftNode.axis) * VMFSharpnessToAxisLength(LeftNode.sharpness) + w_right * i_octahedral_32(RightNode.axis) * VMFSharpnessToAxisLength(RightNode.sharpness);//may be wrong, paper uses BAR_V(BAR_axis here), not just normalized V/axis
+
+    float3 mean = w_left * LeftNode.position + w_right * RightNode.position;
+    float variance = w_left * LeftNode.variance + w_right * RightNode.variance + w_left * w_right * dot(LeftNode.position - RightNode.position, LeftNode.position - RightNode.position);
+
+    float intensity = LeftNode.intensity + RightNode.intensity;
+
+    float radius = max(distance(mean, LeftNode.position) + LeftNode.radius, distance(mean, RightNode.position) + RightNode.radius);
+
+
+	float AxisLength = length(V);
+	if(AxisLength == 0) V = float3(0,1,0);
+	else V /= AxisLength;
+	float sharpness = min(VMFAxisLengthToSharpness(saturate(AxisLength)), 2199023255552.0f);// ((3.0f * Distance(Vector3.zero, V) - Mathf.Pow(Distance(Vector3.zero, V), 3))) / (1.0f - Mathf.Pow(Distance(Vector3.zero, V), 2));
+
+
+	GaussianTreeNode Dat = {mean, radius, octahedral_32(V), variance, sharpness, intensity, Left};
+    return Dat;
+}
+
+struct Transfer {
+    float4x4 Transf2;
+    int SolidOffset;
+};
+
+StructuredBuffer<Transfer> Transfers;
+int LightTreePrimaryTLASOffset;
+
+
+int Resettled;
+[numthreads(256,1,1)]
+void TLASLightBVHRefitKernel (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x >= (uint)SetCount) return;
+    const int Index = WorkingSet[id.x];
+    const int NodeLeft = LightNodesWrite[Index].left;
+    if(Resettled == 0) LightNodesWrite[Index + LightTreePrimaryTLASOffset] = LightNodesWrite[Index];
+    if(NodeLeft < 0) {
+        int StartIndex = _MeshData[_LightMeshes[-(NodeLeft+1)].LockedMeshIndex].LightNodeOffset;
+        float4x4 TransfMat = inverse(_MeshData[_LightMeshes[-(NodeLeft+1)].LockedMeshIndex].W2L);
+       	#ifdef UseSGTree
+	        float3 ExtendedCenter = transform_position(TransfMat, LightNodesWrite[StartIndex].position + float3(LightNodesWrite[StartIndex].radius, 0, 0));
+	        float3 center = transform_position(TransfMat, LightNodesWrite[StartIndex].position);
+	        float3 axis = transform_direction(TransfMat, i_octahedral_32(LightNodesWrite[StartIndex].axis));
+	        float Scale = length(center - ExtendedCenter) / LightNodesWrite[StartIndex].radius;
+
+	        LightNodesWrite[Index].position = center;
+	        LightNodesWrite[Index].sharpness = min(VMFAxisLengthToSharpness(saturate(VMFSharpnessToAxisLength(LightNodesWrite[StartIndex].sharpness))), 2199023255552.0f);// ((3.0f * Distance(Vector3.zero, V) - Mathf.Pow(Distance(Vector3.zero, V), 3))) / (1.0f - Mathf.Pow(Distance(Vector3.zero, V), 2));
+	        LightNodesWrite[Index].axis = octahedral_32(axis);
+	        LightNodesWrite[Index].variance = LightNodesWrite[StartIndex].variance * Scale;        
+
+	        LightNodesWrite[Index].radius = LightNodesWrite[StartIndex].radius * Scale;
+	        LightNodesWrite[Index].intensity = LightNodesWrite[StartIndex].intensity * Scale * Scale;
+	    #else
+	        float3 center = transform_position(TransfMat, (LightNodesWrite[StartIndex].BBMax + LightNodesWrite[StartIndex].BBMin) / 2.0f);
+	        float3 extent = transform_direction(TransfMat, (LightNodesWrite[StartIndex].BBMax - LightNodesWrite[StartIndex].BBMin) / 2.0f);
+	        LightNodesWrite[Index].BBMax = center + extent;
+	        LightNodesWrite[Index].BBMin = center - extent;
+	        float Scale = 1.0f;//length((LightNodesWrite[StartIndex].BBMax - LightNodesWrite[StartIndex].BBMin) / 2.0f) / length(extent);
+	        LightNodesWrite[Index].w = octahedral_32(transform_direction(TransfMat, i_octahedral_32(LightNodesWrite[StartIndex].w)));
+	        LightNodesWrite[Index].phi = max(LightNodesWrite[StartIndex].phi * Scale,0.000000f);
+	        LightNodesWrite[Index].cosTheta_oe = LightNodesWrite[StartIndex].cosTheta_oe;
+	     #endif
+        return;
+    }
+    #ifdef UseSGTree
+	    LightNodesWrite[Index] = UnionSG(LightNodesWrite[NodeLeft], LightNodesWrite[NodeLeft + 1], NodeLeft);
+	#else
+    	LightNodesWrite[Index] = Union(LightNodesWrite[NodeLeft], LightNodesWrite[NodeLeft + 1], NodeLeft);
+    #endif
+}
+
+
+
+
+float3 unpackRGBE(uint x)
+{
+    int exponent = int(x >> 27) - 20;
+    float scale = pow(2, exponent) / 256.0;
+
+    float3 v;
+    v.r = float(x & 0x1ff) * scale;
+    v.g = float((x >> 9) & 0x1ff) * scale;
+    v.b = float((x >> 18) & 0x1ff) * scale;
+
+    return v;
+}
+
+
+#pragma kernel BLASLightTreeRefitKernel
+
+int TotalNodeOffset;
+
+inline float AreaOfTriangle(float3 pt1, float3 pt2, float3 pt3) {
+ return 0.5f * length(cross(pt2 - pt1, pt3 - pt1));
+}
+float4x4 ToWorld;
+
+struct TrianglePos {
+	float3 pos0;
+	float3 posedge1;
+	float3 posedge2;
+};
+inline TrianglePos triangle_get_positions(const int ID) {
+	TrianglePos tri;
+	tri.pos0 = CudaTriArrayINA.Load(ID).pos0;
+	tri.posedge1 = CudaTriArrayINA.Load(ID).posedge1;
+	tri.posedge2 = CudaTriArrayINA.Load(ID).posedge2;
+	return tri;
+}
+[numthreads(256,1,1)]
+void BLASLightTreeRefitKernel (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x >= (uint)SetCount) return;
+    const int Index = WorkingSet[id.x] + TotalNodeOffset;
+    const int NodeLeft = LightNodesWrite[Index].left;
+    [branch]if(NodeLeft < 0) {
+        const LightTriData LightTri = LightTriangles[-(NodeLeft+1) + LightTriBuffOffset];
+        const TrianglePos TriPositions = triangle_get_positions(LightTri.TriTarget + TriBuffOffset);
+        
+#ifdef UseSGTree
+	        float3 mean = (TriPositions.pos0 + (TriPositions.pos0 + TriPositions.posedge1) + (TriPositions.pos0 + TriPositions.posedge2)) / 3.0f;
+	        float radius = max(max(distance(mean, TriPositions.pos0), distance(mean, TriPositions.pos0 + TriPositions.posedge1)), distance(mean, TriPositions.pos0 + TriPositions.posedge2));
+
+	        float area = AreaOfTriangle(TriPositions.pos0, TriPositions.pos0 + TriPositions.posedge1, TriPositions.pos0 + TriPositions.posedge2);
+
+	        float intensity = LightTri.SourceEnergy * area;
+	        float3 V = 0.5f * normalize(cross(TriPositions.posedge1, TriPositions.posedge2));
+	        float variance = (dot(TriPositions.posedge1, TriPositions.posedge1) + dot(TriPositions.posedge2, TriPositions.posedge2) - dot(TriPositions.posedge1, TriPositions.posedge2)) / 18.0f;
+
+	        float AxisLength = length(V);
+	        if(AxisLength == 0) V = float3(0,1,0);
+	        else V /= AxisLength;
+	        LightNodesWrite[Index].sharpness = min(VMFAxisLengthToSharpness(saturate(AxisLength)), 2199023255552.0f);// ((3.0f * Distance(Vector3.zero, V) - Mathf.Pow(Distance(Vector3.zero, V), 3))) / (1.0f - Mathf.Pow(Distance(Vector3.zero, V), 2));
+
+	        LightNodesWrite[Index].position = mean;
+	        LightNodesWrite[Index].radius = radius;
+	        LightNodesWrite[Index].intensity = intensity;
+	        LightNodesWrite[Index].variance = variance;
+	        LightNodesWrite[Index].axis = octahedral_32(V);
+#else 
+	        float3 BBMax = max(max(TriPositions.pos0, TriPositions.pos0 + TriPositions.posedge1), TriPositions.pos0 + TriPositions.posedge2);
+	        float3 BBMin = min(min(TriPositions.pos0, TriPositions.pos0 + TriPositions.posedge1), TriPositions.pos0 + TriPositions.posedge2);
+	        [unroll]for(int i = 0; i < 3; i++) {
+	            if(abs(BBMax[i] - BBMin[i]) < 0.0001f) {
+	                BBMax[i] += 0.0001f;
+	                BBMin[i] -= 0.0001f;
+	            }
+	        }
+	        LightNodesWrite[Index].BBMax = BBMax;
+	        LightNodesWrite[Index].BBMin = BBMin;
+	        LightNodesWrite[Index].w = octahedral_32(-normalize(cross(normalize(TriPositions.posedge1), normalize(TriPositions.posedge2))));
+	        float area = AreaOfTriangle(mul(ToWorld, float4(TriPositions.pos0,1)).xyz, mul(ToWorld, float4(TriPositions.pos0 + TriPositions.posedge1,1)).xyz, mul(ToWorld, float4(TriPositions.pos0 + TriPositions.posedge2,1)).xyz);
+	        if(area == 0) area = 0.000000001f;
+
+	        LightNodesWrite[Index].phi = LightTri.SourceEnergy * area;   
+#endif
+        return;
+    }
+
+#ifdef UseSGTree
+    LightNodesWrite[Index] = UnionSG(LightNodesWrite[NodeLeft + TotalNodeOffset], LightNodesWrite[NodeLeft + 1 + TotalNodeOffset], NodeLeft);
+#else
+    LightNodesWrite[Index] = Union(LightNodesWrite[NodeLeft + TotalNodeOffset], LightNodesWrite[NodeLeft + 1 + TotalNodeOffset], NodeLeft);
+#endif
+}
+
+#pragma kernel BLASCopyNodeDataKernel
+
+#ifdef UseSGTree
+	RWStructuredBuffer<GaussianTreeNode> LightNodesWriteB;
+#else
+	RWStructuredBuffer<LightBVHData> LightNodesWriteB;
+#endif
+
+int TargetOffset;
+int Count;
+[numthreads(256,1,1)]
+void BLASCopyNodeDataKernel (uint3 id : SV_DispatchThreadID)
+{
+	if(id.x >= Count) return;
+	LightNodesWriteB[id.x + TargetOffset] = LightNodesWriteB[id.x + TotalNodeOffset];
+
+}

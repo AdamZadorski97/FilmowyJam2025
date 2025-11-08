@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: d185ed67e112e3c4582c296d2beb5307
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Resources/Utility/RayCastMaterialSelector/RayCastMaterialSelector.cs
+  uploadId: 813472

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7981b89bc7490e249a79ecb4b0a63c8d
+ComputeShaderImporter:
+  externalObjects: {}
+  preprocessorOverride: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Resources/Utility/TTSDFs/TTSDFRayGen.compute
+  uploadId: 813472

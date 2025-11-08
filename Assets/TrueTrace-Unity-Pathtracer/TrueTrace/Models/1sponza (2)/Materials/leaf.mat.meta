@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cde703b8b028ec2479a28a422f3b2004
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Models/1sponza (2)/Materials/leaf.mat
+  uploadId: 813472

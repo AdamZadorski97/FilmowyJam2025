@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 894b7bf03eb873c4f9e4804c5b538232
+ComputeShaderImporter:
+  externalObjects: {}
+  preprocessorOverride: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Resources/Utility/GeneralMeshFunctions.compute
+  uploadId: 813472

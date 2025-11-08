@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3f56e228c8f8c6a40911794e5ce3caa0
+ComputeShaderImporter:
+  externalObjects: {}
+  preprocessorOverride: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242462
+  packageName: TrueTrace - Realtime Pathtracing for Archviz and More
+  packageVersion: 2.7.1
+  assetPath: Assets/TrueTrace-Unity-Pathtracer/TrueTrace/Resources/MainCompute/RayGenKernels.compute
+  uploadId: 813472
