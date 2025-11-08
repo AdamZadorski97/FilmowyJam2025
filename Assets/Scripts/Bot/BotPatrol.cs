@@ -93,10 +93,10 @@ public class BotPatrol : MonoBehaviour
     [Tooltip("Nazwa triggera dla animacji ataku (Gdy gracz traci OSTATNIE życie).")]
     private string finalAttackTrigger = "FinalAttack";
 
-    private bool isOnAttackCooldown = false; // Cooldown bota na animację ataku/ruch
+    private bool isOnAttackCooldown = false;
 
-    // Stringi do wywoływania animacji
-    private const string ANIM_IS_WALKING = "IsWalking";
+    // --- NOWA STAŁA DLA PARAMETRU FLOAT ---
+    private const string ANIM_SPEED_FLOAT = "Speed";
 
     // Zmienne wewnętrzne
     private int currentWaypointIndex = 0;
@@ -148,46 +148,59 @@ public class BotPatrol : MonoBehaviour
     {
         if (waypoints.Count == 0) return;
 
+        // Ustawienie Float Speed w każdej klatce, z wyjątkiem stanów zastoju
+        if (currentState != BotState.Waiting && currentState != BotState.Alert && currentState != BotState.Resting)
+        {
+            SetAnimationSpeedFloat(agent.velocity.magnitude);
+        }
+        else
+        {
+            SetAnimationSpeedFloat(0f);
+        }
+
         switch (currentState)
         {
             case BotState.Moving:
-                SetAnimationBool(ANIM_IS_WALKING, true);
                 HandleMovingState();
                 break;
             case BotState.Waiting:
-                SetAnimationBool(ANIM_IS_WALKING, false);
                 HandleWaitingState();
                 break;
             case BotState.Chase:
-                SetAnimationBool(ANIM_IS_WALKING, true);
                 HandleChaseState();
                 break;
             case BotState.Searching:
-                SetAnimationBool(ANIM_IS_WALKING, true);
                 HandleSearchingState();
                 break;
             case BotState.Resting:
-                SetAnimationBool(ANIM_IS_WALKING, false);
                 HandleRestingState();
                 break;
             case BotState.Alert:
             default:
-                SetAnimationBool(ANIM_IS_WALKING, false);
                 break;
         }
     }
 
     // --- Metody Pomocnicze do Animacji ---
-    private void SetAnimationBool(string paramName, bool value)
+
+    /// <summary>
+    /// Ustawia wartość parametru Float 'Speed' w Animatorze.
+    /// </summary>
+    private void SetAnimationSpeedFloat(float speed)
     {
-        if (animator != null) animator.SetBool(paramName, value);
+        if (animator != null) animator.SetFloat(ANIM_SPEED_FLOAT, speed);
     }
+
+    // Usunięta metoda SetAnimationBool, ponieważ używamy Floata
 
     private void SetAnimationTrigger(string paramName)
     {
         if (animator != null && !string.IsNullOrEmpty(paramName)) animator.SetTrigger(paramName);
     }
 
+    /// <summary>
+    /// Wywoływane przez ScoreManager, gdy gracz straci ostatnie życie.
+    /// </summary>
     public void TriggerFinalAttack()
     {
         if (!string.IsNullOrEmpty(finalAttackTrigger))
@@ -195,7 +208,7 @@ public class BotPatrol : MonoBehaviour
             SetAnimationTrigger(finalAttackTrigger);
             currentState = BotState.Alert;
             agent.isStopped = true;
-            SetAnimationBool(ANIM_IS_WALKING, false);
+            SetAnimationSpeedFloat(0f);
             agent.updateRotation = false;
         }
     }
@@ -206,7 +219,6 @@ public class BotPatrol : MonoBehaviour
     {
         if (teacherFOV.DetectedPlayer != null)
         {
-            // NIE GÓŃ, JEŚLI GRACZ MA WŁASNY COOLDOWN PO ZŁAPANIU
             if (teacherFOV.DetectedPlayer.IsInCooldown()) return;
 
             lastKnownPlayerPosition = teacherFOV.DetectedPlayer.transform.position;
@@ -240,8 +252,7 @@ public class BotPatrol : MonoBehaviour
         currentState = BotState.Chase;
         agent.updateRotation = true;
         agent.isStopped = false;
-        agent.speed = chaseSpeed; // Ustawienie SZYBSZEJ prędkości pościgu
-
+        agent.speed = chaseSpeed;
         agent.SetDestination(targetPosition);
     }
 
@@ -249,7 +260,6 @@ public class BotPatrol : MonoBehaviour
     {
         PlayerController player = teacherFOV.DetectedPlayer;
 
-        // Jeśli jest w cooldownie LUB trwa animacja ataku bota, nie rób nic
         if (isOnAttackCooldown) return;
         if (player != null && player.IsInCooldown()) return;
 
@@ -264,15 +274,13 @@ public class BotPatrol : MonoBehaviour
 
                 if (distToPlayer <= catchDistance)
                 {
-                    // WŁĄCZ STUN GRACZOWI ORAZ COOLDOWN NA PONOWNY POŚCIG
                     player.SetStunned(stunDuration, playerChaseCooldown);
 
                     SetAnimationTrigger(attackTrigger);
                     isOnAttackCooldown = true;
 
-                    OnPlayerCaught.Invoke(player); // Wywołaj event, który zresetuje punkty
+                    OnPlayerCaught.Invoke(player);
 
-                    // Zatrzymujemy bota, by zagrał animację ataku, następnie wznawiamy patrol
                     StartCoroutine(WaitAfterCatchAndResumePatrol(attackAnimationDuration));
                     return;
                 }
@@ -288,7 +296,6 @@ public class BotPatrol : MonoBehaviour
     {
         chaseTimer -= Time.deltaTime;
 
-        // 1. Jeśli bot dotarł do celu (ostatniej znanej pozycji)
         if (!agent.pathPending && agent.remainingDistance <= arrivalThreshold)
         {
             Debug.Log("[BotPatrol] Dotarłem do ostatniej znanej pozycji. Odpoczynek.");
@@ -296,7 +303,6 @@ public class BotPatrol : MonoBehaviour
             return;
         }
 
-        // 2. Jeśli upłynął czas na kontynuację pościgu (5 sekund)
         if (chaseTimer <= 0f)
         {
             Debug.Log("[BotPatrol] Czas na szukanie minął. Odpoczynek.");
@@ -392,7 +398,7 @@ public class BotPatrol : MonoBehaviour
     private IEnumerator WaitAfterCatchAndResumePatrol(float delay)
     {
         agent.isStopped = true;
-        SetAnimationBool(ANIM_IS_WALKING, false);
+        SetAnimationSpeedFloat(0f); // Zatrzymanie animacji
         agent.updateRotation = false;
 
         yield return new WaitForSeconds(delay);
