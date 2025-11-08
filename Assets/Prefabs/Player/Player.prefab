@@ -136,9 +136,14 @@ MonoBehaviour:
   OnActionFinished:
     m_PersistentCalls:
       m_Calls: []
-  moveSpeed: 5
+  baseMoveSpeed: 2
+  runSpeed: 4
+  sneakSpeed: 1
+  accelerationRate: 5
   rotationSpeed: 10
   jumpForce: 5
+  punchDuration: 0.5
+  kickDuration: 0.8
   groundDistance: 0.2
   groundMask:
     serializedVersion: 2
@@ -147,6 +152,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   animator: {fileID: 0}
+  isRunning: 0
+  isSneaking: 0
+  isActionLocked: 0
   isCrouch: 0
   isMoveObject: 0
   canJump: 0
