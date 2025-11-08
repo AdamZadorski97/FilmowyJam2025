@@ -10,6 +10,7 @@ public class DestroyController : MonoBehaviour
     // Metoda uruchamiana, gdy chcemy "zniszczyć" obiekt
     public void AktywujDestrukcje()
     {
+        transform.SetParent(null);
         // 1. Sprawdzenie i dodanie Collidera (jeśli go nie ma)
         // Obiekt musi mieć Collider, aby Rigidbody działało poprawnie
         Collider col = GetComponent<Collider>();
