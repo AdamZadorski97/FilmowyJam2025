@@ -30,7 +30,8 @@ public class FireAlarmSystem : MonoBehaviour
 
     [Tooltip("Krótki dźwięk odtwarzany raz przy wyłączaniu alarmu.")]
     [SerializeField] private AudioClip stopAlarmSoundOneShot;
-
+    public Color red;
+    public Color white;
     // Prywatne zmienne
     private List<Light> lights = new List<Light>();
     private List<VisualEffect> visualEffects = new List<VisualEffect>();
@@ -77,7 +78,7 @@ public class FireAlarmSystem : MonoBehaviour
         audioSource.clip = loopAlarmSound;
 
         // Upewnij się, że system jest wyłączony na starcie
-        SetLightsState(0f);
+        SetLightsState(1f);
         SetVFXState(false);
     }
 
@@ -108,7 +109,11 @@ public class FireAlarmSystem : MonoBehaviour
     {
         if (isAlarmActive) return;
 
-        isAlarmActive = true;
+        foreach (var light in lights)
+        {
+            light.color = red;
+        }
+            isAlarmActive = true;
 
         // Jednorazowy dźwięk WŁĄCZENIA
         if (startAlarmSoundOneShot != null)
@@ -137,7 +142,10 @@ public class FireAlarmSystem : MonoBehaviour
         if (!isAlarmActive) return;
 
         isAlarmActive = false;
-
+        foreach (var light in lights)
+        {
+            light.color = white;
+        }
         // Audio
         audioSource.Stop();
 
@@ -149,7 +157,7 @@ public class FireAlarmSystem : MonoBehaviour
 
         // Światła (Zakończenie i wyłączenie)
         lightSequence?.Kill(true);
-        SetLightsState(0f);
+        SetLightsState(1f);
 
         // VFX (Wyłączenie Emiterów)
         SetVFXState(false);

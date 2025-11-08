@@ -69,7 +69,7 @@ public class DoorController : MonoBehaviour
 
         // 2. Obliczenie rotacji docelowej
         Quaternion targetRotation = closedRotation * Quaternion.AngleAxis(openAngle, rotationAxis);
-
+        SoundManager.Instance.PlaySFX("DoorOpen");
         // 3. Animacja
         transform.DOLocalRotateQuaternion(targetRotation, animationDuration)
                  .SetEase(easeType)
@@ -89,7 +89,7 @@ public class DoorController : MonoBehaviour
         // UWAGA: Aktywujemy przeszkodę na starcie animacji, a nie na końcu,
         // aby agenci nie próbowali przejść, gdy drzwi są już w ruchu.
         UpdateNavMeshObstacle(true);
-
+        SoundManager.Instance.PlaySFX("DoorClose");
         // 2. Animacja
         transform.DOLocalRotateQuaternion(closedRotation, animationDuration)
                  .SetEase(easeType)
