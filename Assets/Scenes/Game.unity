@@ -11823,8 +11823,8 @@ MonoBehaviour:
   loopAlarmSound: {fileID: 8300000, guid: 3e862f2dd2c58d348957cfbd0e6fb6a8, type: 3}
   startAlarmSoundOneShot: {fileID: 8300000, guid: 503f928343303694cba7ea819bc76524, type: 3}
   stopAlarmSoundOneShot: {fileID: 8300000, guid: 9e83cc84542671b47b08154ff5f8faf5, type: 3}
-  red: {r: 1, g: 1, b: 1, a: 0}
-  white: {r: 1, g: 0, b: 0, a: 0}
+  red: {r: 1, g: 1, b: 1, a: 1}
+  white: {r: 1, g: 0, b: 0, a: 1}
 --- !u!82 &2124209400
 AudioSource:
   m_ObjectHideFlags: 0
