@@ -112,14 +112,14 @@ MonoBehaviour:
     mouseSprite: {fileID: 0}
     keyboardSprite: {fileID: 0}
   - name: Sneak
-    inputControlType: 20
+    inputControlType: 21
     mouse: 0
     key: 0
     controllerSprite: {fileID: 0}
     mouseSprite: {fileID: 0}
     keyboardSprite: {fileID: 0}
   - name: Run
-    inputControlType: 21
+    inputControlType: 20
     mouse: 0
     key: 4
     controllerSprite: {fileID: 0}

@@ -11,6 +11,13 @@ GameObject:
   - component: {fileID: 6818475380315536281}
   - component: {fileID: 7570494549810426940}
   - component: {fileID: 5686704818436686070}
+  - component: {fileID: 5052185154754123685}
+  - component: {fileID: 7720926949222563779}
+  - component: {fileID: 9096265254638355860}
+  - component: {fileID: 2750215353048978258}
+  - component: {fileID: 4986806440839893893}
+  - component: {fileID: 5379130125000780619}
+  - component: {fileID: 3620184382740928026}
   m_Layer: 0
   m_Name: AlarmSwitch
   m_TagString: Untagged
@@ -86,3 +93,215 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5052185154754123685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6191261564436504867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 409814e40eb571747bd1b7ca6e823f2d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7720926949222563779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6191261564436504867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1130eb4ec9a5d094183b982a7c25c1c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &9096265254638355860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6191261564436504867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbedfeb3504697b42a9033e19b645816, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHoldTime: 1
+  OnHoldStart:
+    m_PersistentCalls:
+      m_Calls: []
+  OnHoldComplete:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5052185154754123685}
+        m_TargetAssemblyTypeName: FireAlarmSwitch, Assembly-CSharp
+        m_MethodName: OnSwitch
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  enableDebugLogs: 1
+--- !u!114 &2750215353048978258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6191261564436504867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f3d72a37d857bd4490f175c5f3111b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OnTriggerEnterEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4986806440839893893}
+        m_TargetAssemblyTypeName: EPOOutline.Outlinable, EPO
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 7720926949222563779}
+        m_TargetAssemblyTypeName: InteractiveHint, Assembly-CSharp
+        m_MethodName: SpawnActionHint
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: "Alarm przeciwpo\u017Carowy"
+          m_BoolArgument: 1
+        m_CallState: 2
+  OnTriggerExitEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4986806440839893893}
+        m_TargetAssemblyTypeName: EPOOutline.Outlinable, EPO
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 7720926949222563779}
+        m_TargetAssemblyTypeName: InteractiveHint, Assembly-CSharp
+        m_MethodName: HideHint
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: "Alarm przeciwpo\u017Carowy"
+          m_BoolArgument: 1
+        m_CallState: 2
+  OnInteractEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  playerController: {fileID: 0}
+  isOnlyForMan: 0
+--- !u!114 &4986806440839893893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6191261564436504867}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fe91dc294731a9428c0941ea7579110, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  complexMaskingMode: 0
+  drawingMode: 1
+  outlineLayer: 0
+  outlineTargets:
+  - CutoutMask: 8
+    renderer: {fileID: 5686704818436686070}
+    SubmeshIndex: 0
+    BoundsMode: 0
+    Bounds:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0.5, y: 0.5, z: 0.5}
+    CutoutThreshold: 0.5
+    CullMode: 2
+    cutoutTextureName: 
+    cutoutTextureIndex: 0
+  renderStyle: 1
+  outlineParameters:
+    enabled: 1
+    color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    dilateShift: 1
+    blurShift: 1
+    fillPass:
+      shader: {fileID: 0}
+      serializedProperties: []
+  backParameters:
+    enabled: 1
+    color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    dilateShift: 1
+    blurShift: 1
+    fillPass:
+      shader: {fileID: 0}
+      serializedProperties: []
+  frontParameters:
+    enabled: 1
+    color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    dilateShift: 1
+    blurShift: 1
+    fillPass:
+      shader: {fileID: 0}
+      serializedProperties: []
+--- !u!114 &5379130125000780619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6191261564436504867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 034bc47afcbf5e141a58d5c20b7808e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &3620184382740928026
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6191261564436504867}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.7314316, y: 1.6570714, z: 0.6314462}
+  m_Center: {x: -0.0000013643305, y: -0.3285358, z: -0.18427736}

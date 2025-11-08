@@ -39,6 +39,17 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float punchDuration = 0.5f;
     [SerializeField] private float kickDuration = 0.8f;
 
+    // ZMODYFIKOWANE: USTAWIENIA WALKI Z HITBOXAMI
+    [Header("Ustawienia Walki")]
+    [Tooltip("Obiekt Hitboxa dla ciosu pięścią (musi być dzieckiem gracza i mieć PlayerHitbox.cs).")]
+    [SerializeField] private GameObject punchHitboxObject;
+    [Tooltip("Obiekt Hitboxa dla kopnięcia (musi być dzieckiem gracza i mieć PlayerHitbox.cs).")]
+    [SerializeField] private GameObject kickHitboxObject;
+
+    private PlayerHitbox punchHitbox;
+    private PlayerHitbox kickHitbox;
+    // ------------------------------------
+
     // NOWE: Pola do Stunu i Cooldownu
     [Header("Stun i Cooldown")]
     [Tooltip("Czy gracz jest aktualnie oszołomiony (blokada ruchu).")]
@@ -98,6 +109,24 @@ public class PlayerController : MonoBehaviour
         {
             playerRenderer = playerMesh.GetComponentInChildren<Renderer>();
         }
+        punchHitboxObject.transform.SetParent(playerMesh.transform);
+        kickHitboxObject.transform.SetParent(playerMesh.transform);
+        // --- INICJALIZACJA HITBOXÓW ---
+        if (punchHitboxObject != null)
+        {
+            punchHitbox = punchHitboxObject.GetComponent<PlayerHitbox>();
+            if (punchHitbox != null) punchHitbox.ownerController = this; // Ustawienie właściciela
+            punchHitboxObject.SetActive(false); // Domyślnie wyłączony
+           
+        }
+
+        if (kickHitboxObject != null)
+        {
+            kickHitbox = kickHitboxObject.GetComponent<PlayerHitbox>();
+            if (kickHitbox != null) kickHitbox.ownerController = this; // Ustawienie właściciela
+            kickHitboxObject.SetActive(false); // Domyślnie wyłączony
+        }
+        // ------------------------------
     }
 
     /// <summary>
@@ -165,6 +194,15 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        // 🛑 ZABEZPIECZENIE PRZED NullReferenceException (InputController.Instance)
+        if (InputController.Instance == null)
+        {
+            // Możesz zmienić na Debug.LogWarning jeśli to normalne, że jest ładowany później
+            Debug.LogError("BŁĄD: InputController.Instance nie jest dostępny! Sprawdź kolejność wykonania skryptów.");
+            return;
+        }
+        // ----------------------------------------------------------------------
+
         Vector2 rawInput = Vector2.zero;
         float maxSpeed;
 
@@ -176,7 +214,7 @@ public class PlayerController : MonoBehaviour
             if (animator != null)
             {
                 animator.SetBool("IsMoving", false);
-                animator.SetBool("IsRunning", false); // Dodane dla pewności
+                animator.SetBool("IsRunning", false);
             }
             return;
         }
@@ -438,7 +476,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // --- Metody walki ---
+    // --- ZMODYFIKOWANE Metody walki (włączanie/wyłączanie Hitboxa) ---
     private void Punch()
     {
         if (isActionLocked) return;
@@ -450,6 +488,15 @@ public class PlayerController : MonoBehaviour
         }
 
         if (animator != null) animator.SetTrigger("Punch");
+
+        // NOWE: Włączenie Hitboxa i ustawienie obrażeń punktowych
+        if (punchHitbox != null && punchHitboxObject != null)
+        {
+            punchHitbox.SetScoreDamage(5); // Ustaw, że Punch odejmuje 5 punktów
+            punchHitbox.ResetHitbox();
+            punchHitboxObject.SetActive(true);
+        }
+
         StartCoroutine(ActionLockoutCoroutine(punchDuration));
         OnActionStarted.Invoke();
     }
@@ -465,6 +512,15 @@ public class PlayerController : MonoBehaviour
         }
 
         if (animator != null) animator.SetTrigger("Kick");
+
+        // NOWE: Włączenie Hitboxa i ustawienie obrażeń punktowych
+        if (kickHitbox != null && kickHitboxObject != null)
+        {
+            kickHitbox.SetScoreDamage(15); // Ustaw, że Kick odejmuje 15 punktów
+            kickHitbox.ResetHitbox();
+            kickHitboxObject.SetActive(true);
+        }
+
         StartCoroutine(ActionLockoutCoroutine(kickDuration));
         OnActionStarted.Invoke();
     }
@@ -477,6 +533,16 @@ public class PlayerController : MonoBehaviour
         }
 
         yield return new WaitForSeconds(duration);
+
+        // NOWE: Wyłączenie Hitboxa po zakończeniu akcji
+        if (punchHitboxObject != null && punchHitboxObject.activeSelf)
+        {
+            punchHitboxObject.SetActive(false);
+        }
+        if (kickHitboxObject != null && kickHitboxObject.activeSelf)
+        {
+            kickHitboxObject.SetActive(false);
+        }
 
         isActionLocked = false;
         OnActionFinished.Invoke();

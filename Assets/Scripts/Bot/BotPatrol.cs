@@ -212,6 +212,7 @@ public class BotPatrol : MonoBehaviour
     {
         waypoints = null;
         SetAnimationTrigger(attackTrigger);
+        agent.updateRotation = false;
         yield return new WaitForSeconds(finalAttackWaitTime);
 
         if (!string.IsNullOrEmpty(finalAttackTrigger))
@@ -220,7 +221,7 @@ public class BotPatrol : MonoBehaviour
             currentState = BotState.Alert;
             
             SetAnimationSpeedFloat(0f);
-            agent.updateRotation = false;
+            
         }
     }
 
