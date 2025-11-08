@@ -32,10 +32,3 @@ PluginImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 14695
-  packageName: InControl
-  packageVersion: 1.8.11
-  assetPath: Assets/InControl/Plugins/x86_64/XInputInterface64.dll
-  uploadId: 744179

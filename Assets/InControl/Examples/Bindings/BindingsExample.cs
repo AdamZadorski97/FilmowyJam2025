@@ -1,13 +1,32 @@
-using UnityEngine;
-
-
 namespace BindingsExample
 {
+	using InControl;
+	using UnityEngine;
+
+
 	public class BindingsExample : MonoBehaviour
 	{
 		Renderer cachedRenderer;
 		PlayerActions playerActions;
 		string saveData;
+
+
+		void OnEnable()
+		{
+			// See PlayerActions.cs for this setup.
+			playerActions = PlayerActions.CreateWithDefaultBindings();
+			//playerActions.Move.OnLastInputTypeChanged += ( lastInputType ) => Debug.Log( lastInputType );
+
+			LoadBindings();
+		}
+
+
+		void OnDisable()
+		{
+			// This properly disposes of the action set and unsubscribes it from
+			// update events so that it doesn't do additional processing unnecessarily.
+			playerActions.Destroy();
+		}
 
 
 		void Start()
@@ -28,21 +47,26 @@ namespace BindingsExample
 		}
 
 
-		void OnEnable()
+		void SaveBindings()
 		{
-			// See PlayerActions.cs for this setup.
-			playerActions = PlayerActions.CreateWithDefaultBindings();
-			//playerActions.Move.OnLastInputTypeChanged += ( lastInputType ) => Debug.Log( lastInputType );
-
-			LoadBindings();
+			saveData = playerActions.Save();
+			PlayerPrefs.SetString( "Bindings", saveData );
 		}
 
 
-		void OnDisable()
+		void LoadBindings()
 		{
-			// This properly disposes of the action set and unsubscribes it from
-			// update events so that it doesn't do additional processing unnecessarily.
-			playerActions.Destroy();
+			if (PlayerPrefs.HasKey( "Bindings" ))
+			{
+				saveData = PlayerPrefs.GetString( "Bindings" );
+				playerActions.Load( saveData );
+			}
+		}
+
+
+		void OnApplicationQuit()
+		{
+			PlayerPrefs.Save();
 		}
 
 
@@ -127,29 +151,6 @@ namespace BindingsExample
 			if (GUI.Button( new Rect( 140, y + 3.0f, 50, h ), "Reset" ))
 			{
 				playerActions.Reset();
-			}
-		}
-
-
-		void OnApplicationQuit()
-		{
-			PlayerPrefs.Save();
-		}
-
-
-		void SaveBindings()
-		{
-			saveData = playerActions.Save();
-			PlayerPrefs.SetString( "Bindings", saveData );
-		}
-
-
-		void LoadBindings()
-		{
-			if (PlayerPrefs.HasKey( "Bindings" ))
-			{
-				saveData = PlayerPrefs.GetString( "Bindings" );
-				playerActions.Load( saveData );
 			}
 		}
 	}

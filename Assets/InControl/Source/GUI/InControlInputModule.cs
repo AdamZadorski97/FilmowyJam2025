@@ -83,7 +83,7 @@ namespace InControl
 
 		public override bool IsModuleSupported()
 		{
-			#if UNITY_WII || UNITY_PS3 || UNITY_PS4 || UNITY_PS5 || UNITY_XBOX360 || UNITY_XBOXONE || UNITY_GAMECORE || UNITY_SWITCH || UNITY_STADIA
+			#if UNITY_WII || UNITY_PS3 || UNITY_PS4 || UNITY_PS5 || UNITY_XBOX360 || UNITY_XBOXONE || UNITY_GAMECORE || UNITY_SWITCH || UNITY_STADIA || UNITY_GAMECORE
 			return true;
 			#else
 

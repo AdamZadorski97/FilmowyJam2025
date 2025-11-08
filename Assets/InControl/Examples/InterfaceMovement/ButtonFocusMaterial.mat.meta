@@ -2,10 +2,3 @@ fileFormatVersion: 2
 guid: d8fc7c64c0905484388746b372551e50
 NativeFormatImporter:
   userData: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 14695
-  packageName: InControl
-  packageVersion: 1.8.11
-  assetPath: Assets/InControl/Examples/InterfaceMovement/ButtonFocusMaterial.mat
-  uploadId: 744179

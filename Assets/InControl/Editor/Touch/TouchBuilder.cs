@@ -10,30 +10,31 @@ namespace InControl
 		[MenuItem( "GameObject/InControl/Touch/Manager", false, 2 )]
 		static void CreateTouchManager()
 		{
-			foreach (var component in Object.FindObjectsByType<TouchManager>( FindObjectsSortMode.None ))
+			foreach (var component in GameObject.FindObjectsOfType<TouchManager>())
 			{
 				Debug.LogWarning( "Existing Touch Manager component on game object '" + component.gameObject.name + "' will be destroyed." );
-				Object.DestroyImmediate( component );
+				GameObject.DestroyImmediate( component );
 			}
 
-			var manager = Object.FindFirstObjectByType<InControlManager>();
-			if (manager)
+			MonoBehaviour manager;
+			if (manager = GameObject.FindObjectOfType<InControlManager>())
 			{
-				var gameObject = manager.gameObject;
-				gameObject.AddComponent<TouchManager>();
-				Selection.activeGameObject = gameObject;
+				manager.gameObject.AddComponent<TouchManager>();
+				Selection.activeGameObject = manager.gameObject;
 				Debug.Log( "Touch Manager component has been attached to the InControl Manager object." );
 				return;
 			}
-			
-			Debug.LogError( "Could not find InControl Manager object." );
+			else
+			{
+				Debug.LogError( "Could not find InControl Manager object." );
+			}
 		}
 
 
 		[MenuItem( "GameObject/InControl/Touch/Button Control", false, 3 )]
 		public static void CreateTouchButtonControl()
 		{
-			var touchManager = Object.FindFirstObjectByType<TouchManager>();
+			var touchManager = GameObject.FindObjectOfType<TouchManager>();
 			if (touchManager != null)
 			{
 				var gameObject = touchManager.gameObject;
@@ -59,7 +60,7 @@ namespace InControl
 		[MenuItem( "GameObject/InControl/Touch/Stick Control", false, 3 )]
 		public static void CreateTouchStickControl()
 		{
-			var touchManager = Object.FindFirstObjectByType<TouchManager>();
+			var touchManager = GameObject.FindObjectOfType<TouchManager>();
 			if (touchManager != null)
 			{
 				var gameObject = touchManager.gameObject;
@@ -86,7 +87,7 @@ namespace InControl
 		[MenuItem( "GameObject/InControl/Touch/Swipe Control", false, 3 )]
 		public static void CreateTouchSwipeControl()
 		{
-			var touchManager = Object.FindFirstObjectByType<TouchManager>();
+			var touchManager = GameObject.FindObjectOfType<TouchManager>();
 			if (touchManager != null)
 			{
 				var gameObject = touchManager.gameObject;
@@ -110,7 +111,7 @@ namespace InControl
 		[MenuItem( "GameObject/InControl/Touch/Track Control", false, 3 )]
 		public static void CreateTouchTrackControl()
 		{
-			var touchManager = Object.FindFirstObjectByType<TouchManager>();
+			var touchManager = GameObject.FindObjectOfType<TouchManager>();
 			if (touchManager != null)
 			{
 				var gameObject = touchManager.gameObject;
@@ -135,7 +136,7 @@ namespace InControl
 		{
 			TouchManager.Instance.touchCamera.cullingMask = 1 << layer;
 
-			foreach (var control in Object.FindObjectsByType<TouchControl>( FindObjectsSortMode.None ))
+			foreach (var control in GameObject.FindObjectsOfType<TouchControl>())
 			{
 				foreach (var transform in control.gameObject.GetComponentsInChildren<Transform>( true ))
 				{

@@ -123,7 +123,7 @@ namespace InControl
 				case UnityInput.Switch.SwitchProControllerHID _:
 					return InputDeviceStyle.NintendoSwitch;
 				#endif
-				#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
+				#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 				case UnityInput.iOS.iOSGameController _:
 					return InputDeviceStyle.AppleMFi;
 				#endif

@@ -2,10 +2,3 @@ fileFormatVersion: 2
 guid: e5e7da063a33745cb80b01cf6695e1b2
 DefaultImporter:
   userData: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 14695
-  packageName: InControl
-  packageVersion: 1.8.11
-  assetPath: Assets/InControl/Examples/VirtualDevice/VirtualDevice.unity
-  uploadId: 744179

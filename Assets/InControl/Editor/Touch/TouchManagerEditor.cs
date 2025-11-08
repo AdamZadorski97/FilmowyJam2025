@@ -24,8 +24,8 @@ namespace InControl
 			GUILayout.Space( 5.0f );
 
 			var headerRect = GUILayoutUtility.GetRect( 0.0f, -22.0f );
-			headerRect.width = headerTexture.width / 2.0f;
-			headerRect.height = headerTexture.height / 2.0f;
+			headerRect.width = headerTexture.width / 2;
+			headerRect.height = headerTexture.height / 2;
 			GUILayout.Space( headerRect.height );
 
 			DrawDefaultInspector();
@@ -117,7 +117,7 @@ namespace InControl
 			           LayerMask.LayerToName( controlsLayer ) +
 			           "). This will most likely cause these controls to both render and function incorrectly.";
 
-			foreach (var control in FindObjectsByType<TouchControl>( FindObjectsSortMode.None ))
+			foreach (var control in FindObjectsOfType<TouchControl>())
 			{
 				if (control.gameObject.layer != controlsLayer)
 				{

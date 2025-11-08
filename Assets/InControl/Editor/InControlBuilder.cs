@@ -10,8 +10,8 @@ namespace InControl
 		[MenuItem( "GameObject/InControl/Manager", false, 100 )]
 		static void CreateInputManager()
 		{
-			var component = Object.FindFirstObjectByType<InControlManager>();
-			if (component)
+			MonoBehaviour component;
+			if (component = GameObject.FindObjectOfType<InControlManager>())
 			{
 				Selection.activeGameObject = component.gameObject;
 

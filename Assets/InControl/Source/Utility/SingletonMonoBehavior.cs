@@ -104,7 +104,7 @@ namespace InControl
 
 		static TComponent[] FindInstances()
 		{
-			var objects = FindObjectsByType<TComponent>( FindObjectsSortMode.None );
+			var objects = FindObjectsOfType<TComponent>();
 			Array.Sort( objects, ( a, b ) => a.transform.GetSiblingIndex().CompareTo( b.transform.GetSiblingIndex() ) );
 			return objects;
 		}

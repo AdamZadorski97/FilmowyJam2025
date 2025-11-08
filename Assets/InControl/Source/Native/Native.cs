@@ -8,7 +8,7 @@ namespace InControl
 	// @cond nodoc
 	static class Native
 	{
-		#if (UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS) && !UNITY_EDITOR
+		#if (UNITY_IOS || UNITY_TVOS) && !UNITY_EDITOR
 		const string libraryName = "__Internal";
 		#else
 		const string libraryName = "InControlNative";
@@ -17,7 +17,7 @@ namespace InControl
 		const CallingConvention callingConvention = CallingConvention.Cdecl;
 
 
-		#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
+		#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS
 
 
 		[DllImport( libraryName, EntryPoint = "InControl_Init", CallingConvention = callingConvention )]

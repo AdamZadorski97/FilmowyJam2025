@@ -20,15 +20,7 @@ PluginImporter:
       iPhone: iOS
     second:
       enabled: 1
-      settings:
-        FrameworkDependencies: CoreHaptics
+      settings: {}
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 14695
-  packageName: InControl
-  packageVersion: 1.8.11
-  assetPath: Assets/InControl/Plugins/iOS/InControlNative.a
-  uploadId: 744179
