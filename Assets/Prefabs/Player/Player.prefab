@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 1093781696360620098}
   - component: {fileID: 8097227406193990090}
   - component: {fileID: 4029743870090852249}
-  - component: {fileID: 4488590234483703759}
   - component: {fileID: 407197708953971130}
   m_Layer: 7
   m_Name: Player
@@ -129,7 +128,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerID: 0
   agent: {fileID: 4029743870090852249}
+  playerCameraTransform: {fileID: 0}
   playerMesh: {fileID: 0}
+  OnActionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  OnActionFinished:
+    m_PersistentCalls:
+      m_Calls: []
   moveSpeed: 5
   rotationSpeed: 10
   jumpForce: 5
@@ -177,28 +183,6 @@ NavMeshAgent:
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!95 &4488590234483703759
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8852640232891564323}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!54 &407197708953971130
 Rigidbody:
   m_ObjectHideFlags: 0
