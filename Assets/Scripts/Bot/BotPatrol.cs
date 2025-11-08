@@ -2,17 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Events; // Wymagane dla UnityEvent z parametrem
+using UnityEngine.Events;
 
 /// <summary>
-/// Kontroluje bota AI, który patroluje listę punktów (waypoints).
-/// Reaguje na wykrycie gracza przez TeacherFOV i kontroluje animacje.
+/// Definiuje właściwości każdego punktu patrolu.
 /// </summary>
-/// 
-
-
-
-// NOWA KLASA: Definiuje właściwości każdego punktu patrolu.
 [System.Serializable]
 public class PatrolWaypoint
 {
@@ -33,12 +27,11 @@ public class PatrolWaypoint
 [RequireComponent(typeof(NavMeshAgent))]
 public class BotPatrol : MonoBehaviour
 {
-    // --- NOWY EVENT ---
+    // --- EVENT Z PARAMETREM ---
     [Header("Eventy Akcji")]
-    [Tooltip("Wywoływane, gdy bot złapie gracza (bliskość < catchDistance) podczas ALARMU. Oczekuje PlayerController.")]
-    // UnityEvent<T> wymaga, aby PlayerController był dostępny w zasięgu (using UnityEngine; jest).
+    [Tooltip("Wywoływane, gdy bot złapie gracza (bliskość < catchDistance). Oczekuje PlayerController.")]
     public UnityEvent<PlayerController> OnPlayerCaught;
-    // ------------------
+    // --------------------------
 
     [Header("Referencje")]
     [SerializeField]
@@ -48,23 +41,52 @@ public class BotPatrol : MonoBehaviour
     [SerializeField]
     private TeacherFOV teacherFOV;
 
+    [Header("Ustawienia Prędkości")]
+    [Tooltip("Prędkość poruszania się bota podczas patrolu (Walking).")]
+    [SerializeField] private float patrolSpeed = 3.5f;
+    [Tooltip("Prędkość poruszania się bota podczas pościgu (Running).")]
+    [SerializeField] private float chaseSpeed = 6.0f;
+
     [Header("Ustawienia Patrolu")]
     [SerializeField]
-    [Tooltip("Lista punktów patrolu (z czasem i rotacją). Kolejność ma znaczenie!")]
+    [Tooltip("Lista punktów patrolu.")]
     private List<PatrolWaypoint> waypoints;
 
     [SerializeField]
-    [Tooltip("Jak blisko bot musi podejść do punktu, aby uznać go za 'osiągnięty'.")]
+    [Tooltip("Jak blisko bot musi podejść do punktu.")]
     private float arrivalThreshold = 0.5f;
 
     [SerializeField]
-    [Tooltip("Jak szybko bot obraca się w docelowy kierunek podczas postoju.")]
+    [Tooltip("Jak szybko bot obraca się w docelowy kierunek.")]
     private float rotationSpeed = 5f;
 
-    [Header("Ustawienia Pościgu (NOWE)")]
+    [Header("Ustawienia Złapania i Pościgu")]
     [SerializeField]
-    [Tooltip("Maksymalna odległość do gracza, by uznać go za 'złapanego' i wywołać akcję.")]
-    private float catchDistance = 2.0f; // Dystans 2 jednostek
+    [Tooltip("Maksymalna odległość do gracza, by uznać go za 'złapanego'.")]
+    private float catchDistance = 2.0f;
+
+    [SerializeField]
+    [Tooltip("Czas cooldownu po złapaniu, zanim bot wróci do akcji.")]
+    private float catchCooldown = 2.0f;
+
+    [Tooltip("Czas kontynuacji pościgu po straceniu gracza (np. 5.0s).")]
+    [SerializeField] private float chaseRefreshTime = 5.0f;
+    [Tooltip("Czas odpoczynku po nieudanym pościgu (np. 3.0s).")]
+    [SerializeField] private float restDuration = 3.0f;
+
+    [SerializeField]
+    [Tooltip("Nazwa triggera animacji ataku (zwykłe złapanie).")]
+    private string attackTrigger = "Attack";
+
+    [SerializeField]
+    [Tooltip("Nazwa triggera dla animacji odpoczynku (Rest/Search).")]
+    private string restTrigger = "Rest";
+
+    [SerializeField]
+    [Tooltip("Nazwa triggera dla animacji ataku (Gdy gracz traci OSTATNIE życie).")]
+    private string finalAttackTrigger = "FinalAttack";
+
+    private bool isOnCatchCooldown = false;
 
     // Stringi do wywoływania animacji
     private const string ANIM_IS_WALKING = "IsWalking";
@@ -72,21 +94,26 @@ public class BotPatrol : MonoBehaviour
     // Zmienne wewnętrzne
     private int currentWaypointIndex = 0;
     private float waitTimer = 0f;
+    private float chaseTimer;
     private BotState currentState;
-    private Vector3 lastKnownPlayerPosition; // Ostatnia znana pozycja gracza
+    private Vector3 lastKnownPlayerPosition;
 
     private enum BotState
     {
         Moving,
         Waiting,
         Alert,
-        Chase  // Pogoń do ostatniej znanej pozycji
+        Chase,
+        Searching,
+        Resting
     }
 
     private void Awake()
     {
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
+
+        ScoreManager.SetBotPatrolReference(this);
     }
 
     private void Start()
@@ -99,61 +126,21 @@ public class BotPatrol : MonoBehaviour
             return;
         }
 
-        // SUBSKRYPCJA DO EVENTÓW Z TeacherFOV
         if (teacherFOV != null)
         {
             teacherFOV.OnPlayerDetected.AddListener(OnPlayerDetected);
             teacherFOV.OnPlayerLost.AddListener(OnPlayerLost);
         }
 
+        agent.speed = patrolSpeed;
+
         StartMovingToNextWaypoint();
     }
-
-    // Metoda wywoływana przez event TeacherFOV.OnPlayerDetected
-    private void OnPlayerDetected()
-    {
-        // Sprawdzamy, czy wykryto gracza
-        if (teacherFOV.DetectedPlayer != null)
-        {
-            // Zapisz pozycję gracza i rozpocznij pościg (lub odśwież cel, jeśli już gonimy)
-            lastKnownPlayerPosition = teacherFOV.DetectedPlayer.transform.position;
-
-            if (currentState != BotState.Chase)
-            {
-                currentState = BotState.Chase;
-                StartChase(lastKnownPlayerPosition);
-                Debug.Log($"[BotPatrol] GRACZ WYKRYTY! Przechodzę w stan Chase do: {lastKnownPlayerPosition}.");
-            }
-            else
-            {
-                // Jeśli już gonimy, po prostu odśwież cel
-                agent.SetDestination(lastKnownPlayerPosition);
-            }
-        }
-    }
-
-    // Metoda wywoływana, gdy gracz zniknie z FOV
-    private void OnPlayerLost()
-    {
-        if (currentState == BotState.Chase)
-        {
-            // Pozostajemy w Chase, kontynuując ruch do ostatniej znanej pozycji
-            Debug.Log("[BotPatrol] Gracz stracony, ale kontynuuję do ostatniej znanej pozycji.");
-        }
-        else if (currentState == BotState.Alert)
-        {
-            // Wznawiamy patrol (jeśli byliśmy tylko w trybie Alert)
-            StartMovingToNextWaypoint();
-            Debug.Log("[BotPatrol] Gracz stracony. Wznawiam patrol.");
-        }
-    }
-
 
     private void Update()
     {
         if (waypoints.Count == 0) return;
 
-        // Prosta maszyna stanów
         switch (currentState)
         {
             case BotState.Moving:
@@ -164,18 +151,26 @@ public class BotPatrol : MonoBehaviour
                 SetAnimationBool(ANIM_IS_WALKING, false);
                 HandleWaitingState();
                 break;
-            case BotState.Alert:
-                SetAnimationBool(ANIM_IS_WALKING, false);
-                break;
-            case BotState.Chase: // NOWY STAN
+            case BotState.Chase:
                 SetAnimationBool(ANIM_IS_WALKING, true);
                 HandleChaseState();
+                break;
+            case BotState.Searching:
+                SetAnimationBool(ANIM_IS_WALKING, true);
+                HandleSearchingState();
+                break;
+            case BotState.Resting:
+                SetAnimationBool(ANIM_IS_WALKING, false);
+                HandleRestingState();
+                break;
+            case BotState.Alert:
+            default:
+                SetAnimationBool(ANIM_IS_WALKING, false);
                 break;
         }
     }
 
     // --- Metody Pomocnicze do Animacji ---
-
     private void SetAnimationBool(string paramName, bool value)
     {
         if (animator != null) animator.SetBool(paramName, value);
@@ -186,7 +181,153 @@ public class BotPatrol : MonoBehaviour
         if (animator != null && !string.IsNullOrEmpty(paramName)) animator.SetTrigger(paramName);
     }
 
+    /// <summary>
+    /// Wywoływane przez ScoreManager, gdy gracz straci ostatnie życie.
+    /// </summary>
+    public void TriggerFinalAttack()
+    {
+        if (!string.IsNullOrEmpty(finalAttackTrigger))
+        {
+            SetAnimationTrigger(finalAttackTrigger);
+            currentState = BotState.Alert;
+            agent.isStopped = true;
+            SetAnimationBool(ANIM_IS_WALKING, false);
+            agent.updateRotation = false;
+        }
+    }
+
+    // --- Obsługa Eventów FOV ---
+
+    private void OnPlayerDetected()
+    {
+        if (teacherFOV.DetectedPlayer != null)
+        {
+            lastKnownPlayerPosition = teacherFOV.DetectedPlayer.transform.position;
+            chaseTimer = chaseRefreshTime;
+
+            if (currentState != BotState.Chase)
+            {
+                currentState = BotState.Chase;
+                StartChase(lastKnownPlayerPosition);
+            }
+            else
+            {
+                agent.SetDestination(lastKnownPlayerPosition);
+            }
+        }
+    }
+
+    private void OnPlayerLost()
+    {
+        if (currentState == BotState.Chase)
+        {
+            currentState = BotState.Searching;
+            Debug.Log("[BotPatrol] Gracz stracony. Kontynuuję pościg (Search) przez 5s.");
+        }
+    }
+
     // --- Obsługa Stanów ---
+
+    private void StartChase(Vector3 targetPosition)
+    {
+        currentState = BotState.Chase;
+        agent.updateRotation = true;
+        agent.isStopped = false;
+        agent.speed = chaseSpeed; // Ustawienie SZYBSZEJ prędkości pościgu
+
+        agent.SetDestination(targetPosition);
+    }
+
+    private void HandleChaseState()
+    {
+        PlayerController player = teacherFOV.DetectedPlayer;
+
+        if (player != null)
+        {
+            lastKnownPlayerPosition = player.transform.position;
+            agent.SetDestination(lastKnownPlayerPosition);
+
+            if (!isOnCatchCooldown)
+            {
+                float distToPlayer = Vector3.Distance(transform.position, player.transform.position);
+
+                if (distToPlayer <= catchDistance)
+                {
+                    SetAnimationTrigger(attackTrigger);
+                    isOnCatchCooldown = true;
+
+                    OnPlayerCaught.Invoke(player);
+
+                    StartCoroutine(WaitAfterCatchAndResumePatrol(catchCooldown));
+                    return;
+                }
+            }
+        }
+        else
+        {
+            OnPlayerLost();
+        }
+    }
+
+    private void HandleSearchingState()
+    {
+        chaseTimer -= Time.deltaTime;
+
+        // 1. Jeśli bot dotarł do celu (ostatniej znanej pozycji)
+        if (!agent.pathPending && agent.remainingDistance <= arrivalThreshold)
+        {
+            Debug.Log("[BotPatrol] Dotarłem do ostatniej znanej pozycji. Odpoczynek.");
+            StartResting();
+            return;
+        }
+
+        // 2. Jeśli upłynął czas na kontynuację pościgu (5 sekund)
+        if (chaseTimer <= 0f)
+        {
+            Debug.Log("[BotPatrol] Czas na szukanie minął. Odpoczynek.");
+            StartResting();
+            return;
+        }
+    }
+
+    private void StartResting()
+    {
+        currentState = BotState.Resting;
+        agent.isStopped = true;
+        agent.speed = patrolSpeed;
+
+        SetAnimationTrigger(restTrigger);
+
+        StartCoroutine(RestCoroutine());
+    }
+
+    private IEnumerator RestCoroutine()
+    {
+        yield return new WaitForSeconds(restDuration);
+
+        currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
+        StartMovingToNextWaypoint();
+    }
+
+    private void HandleRestingState()
+    {
+        // Stan jest obsługiwany przez korutynę
+    }
+
+    private void StartMovingToNextWaypoint()
+    {
+        currentState = BotState.Moving;
+
+        agent.updateRotation = true;
+        agent.isStopped = false;
+        agent.speed = patrolSpeed;
+
+        PatrolWaypoint targetWaypoint = waypoints[currentWaypointIndex];
+        if (targetWaypoint.point != null)
+        {
+            agent.SetDestination(targetWaypoint.point.position);
+        }
+    }
 
     private void HandleMovingState()
     {
@@ -194,6 +335,18 @@ public class BotPatrol : MonoBehaviour
         {
             StartWaiting();
         }
+    }
+
+    private void StartWaiting()
+    {
+        currentState = BotState.Waiting;
+
+        waitTimer = waypoints[currentWaypointIndex].waitTime;
+
+        agent.updateRotation = false;
+        agent.isStopped = true;
+
+        SetAnimationTrigger(waypoints[currentWaypointIndex].idleAnimationTrigger);
     }
 
     private void HandleWaitingState()
@@ -221,82 +374,20 @@ public class BotPatrol : MonoBehaviour
         }
     }
 
-    private void StartChase(Vector3 targetPosition)
-    {
-        currentState = BotState.Chase;
-        agent.updateRotation = true;
-        agent.isStopped = false;
-
-        agent.SetDestination(targetPosition);
-    }
-
-    private void HandleChaseState()
-    {
-        // 1. Sprawdzenie warunków złapania
-        PlayerController player = teacherFOV.DetectedPlayer;
-
-        if (player != null)
-        {
-            float distToPlayer = Vector3.Distance(transform.position, player.transform.position);
-
-            if (distToPlayer <= catchDistance)
-            {
-                Debug.Log($"[BotPatrol] Gracz złapany w promieniu {catchDistance}m! Wywołuję zerowanie postępu.");
-                OnPlayerCaught.Invoke(player); // WYWOŁANIE AKCJI ZŁAPANIA
-
-                // Zatrzymujemy się i czekamy przed wznowieniem patrolu
-                StartCoroutine(WaitAfterCatchAndResumePatrol(1.0f));
-                return;
-            }
-        }
-
-        // 2. Sprawdzenie, czy bot dotarł do celu (ostatniej znanej pozycji)
-        if (!agent.pathPending && agent.remainingDistance <= arrivalThreshold)
-        {
-            Debug.Log("[BotPatrol] Dotarłem do ostatniej znanej pozycji. Wznawiam patrol.");
-            StartMovingToNextWaypoint();
-        }
-    }
-
     private IEnumerator WaitAfterCatchAndResumePatrol(float delay)
     {
         agent.isStopped = true;
         SetAnimationBool(ANIM_IS_WALKING, false);
+        agent.updateRotation = false;
 
         yield return new WaitForSeconds(delay);
 
-        // Po krótkiej chwili wracamy do patrolu, do bieżącego (ostatniego) punktu
-        StartMovingToNextWaypoint();
-    }
-
-    private void StartWaiting()
-    {
-        currentState = BotState.Waiting;
-
-        waitTimer = waypoints[currentWaypointIndex].waitTime;
-
-        agent.updateRotation = false;
-        agent.isStopped = true;
-
-        SetAnimationTrigger(waypoints[currentWaypointIndex].idleAnimationTrigger);
-    }
-
-    private void StartMovingToNextWaypoint()
-    {
-        currentState = BotState.Moving;
-
         agent.updateRotation = true;
-        agent.isStopped = false;
 
-        PatrolWaypoint targetWaypoint = waypoints[currentWaypointIndex];
-        if (targetWaypoint.point != null)
-        {
-            agent.SetDestination(targetWaypoint.point.position);
-        }
-        else
-        {
-            Debug.LogWarning($"[BotPatrol] Punkt o indeksie {currentWaypointIndex} jest 'null'.", this);
-        }
+        isOnCatchCooldown = false;
+
+        currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
+        StartMovingToNextWaypoint();
     }
 
     // --- OnDrawGizmos (bez zmian) ---
