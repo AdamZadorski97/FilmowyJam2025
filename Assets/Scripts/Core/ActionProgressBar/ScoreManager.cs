@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.SocialPlatforms.Impl;
 
 /// <summary>
 /// Klasa Singleton zarządzająca faktycznym stanem punktów i UI.
@@ -49,10 +50,25 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
+    public void ResetPoints(int playerID)
+    {
+        if (playerID == 1 && scoreTextP1 != null)
+        {
+            scoreP1 = 0;
+            scoreTextP1.text = scoreP1.ToString();
+        }
+        else if (playerID == 2 && scoreTextP2 != null)
+        {
+            scoreP2 = 0;
+            scoreTextP2.text = scoreP2.ToString();
+        }
+    }
+
     private void UpdateScoreUI(int playerID)
     {
         if (playerID == 1 && scoreTextP1 != null)
         {
+       
             scoreTextP1.text = scoreP1.ToString();
         }
         else if (playerID == 2 && scoreTextP2 != null)

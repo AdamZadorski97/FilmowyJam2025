@@ -13,17 +13,38 @@ public static class ScoreService
         {
             if (ScoreManager.Instance == null)
             {
-                Debug.LogError("ScoreManager nie został znaleziony w scenie! Nie można dodać punktów.");
+                // Ważne: Zawsze upewnij się, że ScoreManager jest w scenie.
+                Debug.LogError("ScoreManager nie został znaleziony w scenie! Nie można zarządzać punktami.");
             }
             return ScoreManager.Instance;
         }
     }
 
+    /// <summary>
+    /// Dodaje określoną liczbę punktów dla danego gracza.
+    /// </summary>
     public static void AddPoints(int playerID, int points)
     {
         if (ManagerInstance != null)
         {
             ManagerInstance.AddPoints(playerID, points);
+            // Zakładamy, że ScoreManager aktualizuje UI po dodaniu punktów.
+        }
+    }
+
+    /// <summary>
+    /// ZERUJE punkty danego gracza (kara za złapanie przez bota).
+    /// </summary>
+    /// <param name="playerID">ID gracza (1 lub 2), którego punkty mają być wyzerowane.</param>
+    public static void ResetPoints(int playerID)
+    {
+        if (ManagerInstance != null)
+        {
+            // Przekierowanie do metody w ScoreManager, która powinna zresetować stan punktacji
+            // i wywołać aktualizację UI.
+            ManagerInstance.ResetPoints(playerID);
+
+            Debug.Log($"[ScoreService] Punkty gracza {playerID} zostały WYRZEROWANE (Kara od bota).");
         }
     }
 }
