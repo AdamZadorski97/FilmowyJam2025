@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7140366351902532075}
   - component: {fileID: 384939524658412993}
   - component: {fileID: 1476936365966194636}
+  - component: {fileID: 2818170206448808062}
   m_Layer: 0
   m_Name: Can_1
   m_TagString: Untagged
@@ -137,6 +138,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 6800914339948019258, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &2818170206448808062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 606806514662010439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &2223599840351429988
 GameObject:
   m_ObjectHideFlags: 0
@@ -149,6 +164,8 @@ GameObject:
   - component: {fileID: 5745685498484175378}
   - component: {fileID: 28337533399314898}
   - component: {fileID: 2516238142577068442}
+  - component: {fileID: 1867122669989023433}
+  - component: {fileID: 1328319366791603908}
   m_Layer: 0
   m_Name: Trash
   m_TagString: Untagged
@@ -247,6 +264,220 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 5080731651295093379, guid: c044d9b57985f2f498a255f84fe876d0, type: 3}
+--- !u!114 &1867122669989023433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2223599840351429988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
+--- !u!114 &1328319366791603908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2223599840351429988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbedfeb3504697b42a9033e19b645816, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHoldTime: 2
+  OnHoldStart:
+    m_PersistentCalls:
+      m_Calls: []
+  OnHoldComplete:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1867122669989023433}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 8541543329895223417}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 2818170206448808062}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 3173111901758256470}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4481519563067777652}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1130893655055601324}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 3324976506814393078}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 3885839210463698515}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 779754373726405262}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 7279769473526296241}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4034861049231294908}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 8599467462912224165}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4211062859071481224}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4449712678604193413}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4005035619311807090}
+        m_TargetAssemblyTypeName: DestroyController, Assembly-CSharp
+        m_MethodName: AktywujDestrukcje
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  enableDebugLogs: 1
 --- !u!1 &3491090168970314010
 GameObject:
   m_ObjectHideFlags: 0
@@ -260,6 +491,7 @@ GameObject:
   - component: {fileID: 3262618363167360254}
   - component: {fileID: 6585162233516141261}
   - component: {fileID: 7175635097083849216}
+  - component: {fileID: 3885839210463698515}
   m_Layer: 0
   m_Name: Can_6
   m_TagString: Untagged
@@ -384,6 +616,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -8883629608343770549, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &3885839210463698515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3491090168970314010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &4594166439593128551
 GameObject:
   m_ObjectHideFlags: 0
@@ -397,6 +643,7 @@ GameObject:
   - component: {fileID: 2229971674781119844}
   - component: {fileID: 6736729311150169163}
   - component: {fileID: 6799456039139992385}
+  - component: {fileID: 4211062859071481224}
   m_Layer: 0
   m_Name: Cup_Trash_2
   m_TagString: Untagged
@@ -521,6 +768,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -7163023822507177683, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &4211062859071481224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4594166439593128551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &4683080965092720181
 GameObject:
   m_ObjectHideFlags: 0
@@ -534,6 +795,7 @@ GameObject:
   - component: {fileID: 36220047616261412}
   - component: {fileID: 5944796584285877439}
   - component: {fileID: 2251184600085466199}
+  - component: {fileID: 8599467462912224165}
   m_Layer: 0
   m_Name: Cup_Trash_1
   m_TagString: Untagged
@@ -658,6 +920,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 7003808871935634306, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &8599467462912224165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4683080965092720181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &5130124931568225945
 GameObject:
   m_ObjectHideFlags: 0
@@ -671,6 +947,7 @@ GameObject:
   - component: {fileID: 770509634282516511}
   - component: {fileID: 2823050139444178203}
   - component: {fileID: 7179601488770413396}
+  - component: {fileID: 3324976506814393078}
   m_Layer: 0
   m_Name: Can_5
   m_TagString: Untagged
@@ -795,6 +1072,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -3908851557732895605, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &3324976506814393078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130124931568225945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &5341533013459384920
 GameObject:
   m_ObjectHideFlags: 0
@@ -808,6 +1099,7 @@ GameObject:
   - component: {fileID: 1433438764013338830}
   - component: {fileID: 1507211470962873879}
   - component: {fileID: 6362927756645909391}
+  - component: {fileID: 4034861049231294908}
   m_Layer: 0
   m_Name: Cup_Trash
   m_TagString: Untagged
@@ -932,6 +1224,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -220062375733385708, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &4034861049231294908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5341533013459384920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &5768410378459881788
 GameObject:
   m_ObjectHideFlags: 0
@@ -945,6 +1251,7 @@ GameObject:
   - component: {fileID: 5479677271486624003}
   - component: {fileID: 2991717384948301826}
   - component: {fileID: 4347667413482904759}
+  - component: {fileID: 779754373726405262}
   m_Layer: 0
   m_Name: Can_7
   m_TagString: Untagged
@@ -1069,6 +1376,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 428304143080256109, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &779754373726405262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5768410378459881788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &7403683287483614783
 GameObject:
   m_ObjectHideFlags: 0
@@ -1082,6 +1403,7 @@ GameObject:
   - component: {fileID: 1377183900499142279}
   - component: {fileID: 8076204714796454602}
   - component: {fileID: 8018780907760967302}
+  - component: {fileID: 1130893655055601324}
   m_Layer: 0
   m_Name: Can_4
   m_TagString: Untagged
@@ -1206,6 +1528,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -5980080885237898836, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &1130893655055601324
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7403683287483614783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &7502942123081933869
 GameObject:
   m_ObjectHideFlags: 0
@@ -1219,6 +1555,7 @@ GameObject:
   - component: {fileID: 5176512902246189245}
   - component: {fileID: 2054982383712262280}
   - component: {fileID: 193929944616931901}
+  - component: {fileID: 7279769473526296241}
   m_Layer: 0
   m_Name: Can_8
   m_TagString: Untagged
@@ -1343,6 +1680,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -2557658035797003957, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &7279769473526296241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7502942123081933869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &8250002012253968861
 GameObject:
   m_ObjectHideFlags: 0
@@ -1356,6 +1707,7 @@ GameObject:
   - component: {fileID: 6395170107299076335}
   - component: {fileID: 6354364202355927522}
   - component: {fileID: 1323065450777909140}
+  - component: {fileID: 4481519563067777652}
   m_Layer: 0
   m_Name: Can_3
   m_TagString: Untagged
@@ -1480,6 +1832,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 3056558235731609701, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &4481519563067777652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8250002012253968861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &8446716920374057991
 GameObject:
   m_ObjectHideFlags: 0
@@ -1493,6 +1859,7 @@ GameObject:
   - component: {fileID: 5286418214565966831}
   - component: {fileID: 8071962390421956853}
   - component: {fileID: 7466184801219547412}
+  - component: {fileID: 4449712678604193413}
   m_Layer: 0
   m_Name: Spray_1
   m_TagString: Untagged
@@ -1617,6 +1984,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 8938433866106014889, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &4449712678604193413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8446716920374057991}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &8589410792449304882
 GameObject:
   m_ObjectHideFlags: 0
@@ -1630,6 +2011,7 @@ GameObject:
   - component: {fileID: 2626429146060705036}
   - component: {fileID: 6483097717506730870}
   - component: {fileID: 5932239462336214460}
+  - component: {fileID: 4005035619311807090}
   m_Layer: 0
   m_Name: Spray_2
   m_TagString: Untagged
@@ -1754,6 +2136,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 5963706610149127067, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &4005035619311807090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8589410792449304882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &8608681355983628361
 GameObject:
   m_ObjectHideFlags: 0
@@ -1767,6 +2163,7 @@ GameObject:
   - component: {fileID: 3073328907300192824}
   - component: {fileID: 5492323024641924990}
   - component: {fileID: 1816721961125684684}
+  - component: {fileID: 8541543329895223417}
   m_Layer: 0
   m_Name: Can
   m_TagString: Untagged
@@ -1891,6 +2288,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 6168650812902891753, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &8541543329895223417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8608681355983628361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &9095408905187065933
 GameObject:
   m_ObjectHideFlags: 0
@@ -1904,6 +2315,7 @@ GameObject:
   - component: {fileID: 7780026893585896023}
   - component: {fileID: 4810300973721512182}
   - component: {fileID: 1337485157073966705}
+  - component: {fileID: 3173111901758256470}
   m_Layer: 0
   m_Name: Can_2
   m_TagString: Untagged
@@ -2028,6 +2440,20 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -8494328014109376513, guid: 5b528fab375ca8f43b3038466f91a06f, type: 3}
+--- !u!114 &3173111901758256470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9095408905187065933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5c8df8d45d5cf41a91da8570b68ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  silaPodrzucenia: 5
+  momentObrotowy: 5
 --- !u!1 &9110978118630788401
 GameObject:
   m_ObjectHideFlags: 0

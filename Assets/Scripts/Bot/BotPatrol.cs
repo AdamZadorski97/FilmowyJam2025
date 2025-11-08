@@ -146,7 +146,7 @@ public class BotPatrol : MonoBehaviour
 
     private void Update()
     {
-        if (waypoints.Count == 0) return;
+        if (waypoints.Count == null) return;
 
         // Ustawienie Float Speed w każdej klatce, z wyjątkiem stanów zastoju
         if (currentState != BotState.Waiting && currentState != BotState.Alert && currentState != BotState.Resting)
@@ -291,7 +291,7 @@ public class BotPatrol : MonoBehaviour
                     isOnAttackCooldown = true;
 
                     OnPlayerCaught.Invoke(player);
-
+                    StopAllCoroutines();
                     StartCoroutine(WaitAfterCatchAndResumePatrol(attackAnimationDuration));
                     return;
                 }
