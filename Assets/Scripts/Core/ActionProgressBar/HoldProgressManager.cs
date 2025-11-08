@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using TMPro; // **DODAJ TO!**
 
 /// <summary>
 /// Główny skrypt 'driver' dla prefabu paska postępu.
@@ -13,6 +14,10 @@ public class HoldProgressManager : MonoBehaviour
     [SerializeField]
     [Tooltip("Obrazek, który będzie pełnił rolę paska postępu (musi być typu 'Filled')")]
     private Image progressBarImage;
+
+    [SerializeField]
+    [Tooltip("Opcjonalne: Tekst (TextMeshProUGUI) do wyświetlania % postępu")]
+    private TextMeshProUGUI progressText; // **NOWE POLE**
 
     private CanvasGroup canvasGroup;
     private Tweener fadeTween;
@@ -33,6 +38,12 @@ public class HoldProgressManager : MonoBehaviour
         else
         {
             Debug.LogError("HoldProgressManager: Prefab nie ma przypisanego 'progressBarImage'!");
+        }
+
+        // **NOWA ZMIANA:** Ustawienie domyślnego tekstu na starcie
+        if (progressText != null)
+        {
+            progressText.text = "0%";
         }
 
         // Ustaw, aby ten obiekt UI przetrwał zmiany sceny, tak jak manager
@@ -56,6 +67,12 @@ public class HoldProgressManager : MonoBehaviour
         // Zresetuj pasek i pokaż go
         progressBarImage.fillAmount = 0f;
 
+        // **NOWA ZMIANA:** Zresetuj tekst
+        if (progressText != null)
+        {
+            progressText.text = "0%";
+        }
+
         if (fadeTween.IsActive()) fadeTween.Kill();
         fadeTween = canvasGroup.DOFade(1f, 0.2f);
     }
@@ -72,6 +89,11 @@ public class HoldProgressManager : MonoBehaviour
             {
                 progressBarImage.fillAmount = 0f;
             }
+            // **NOWA ZMIANA:** Zresetuj tekst po zniknięciu
+            if (progressText != null)
+            {
+                progressText.text = "0%";
+            }
             this.trackedInteractor = null;
         });
     }
@@ -81,10 +103,21 @@ public class HoldProgressManager : MonoBehaviour
         // Jeśli nie śledzimy interaktora (bo jesteśmy ukryci), nic nie rób
         if (trackedInteractor == null) return;
 
+        // Pobierz aktualny postęp (w zakresie 0.0 do 1.0)
+        float progress = trackedInteractor.GetHoldProgress();
+
         // Aktualizuj fillAmount na podstawie postępu śledzonego interaktora
         if (progressBarImage != null)
         {
-            progressBarImage.fillAmount = trackedInteractor.GetHoldProgress();
+            progressBarImage.fillAmount = progress;
+        }
+
+        // **NOWA ZMIANA:** Aktualizuj tekst z procentowym postępem
+        if (progressText != null)
+        {
+            // Przelicz postęp na procent (0-100) i zaokrąglij do całości, dodając symbol %
+            int percent = Mathf.FloorToInt(progress * 100f);
+            progressText.text = $"{percent}%";
         }
     }
 }
