@@ -93,8 +93,15 @@ public class PlayerController : MonoBehaviour
     {
         Vector2 rawInput = Vector2.zero;
         float maxSpeed;
-        if (moveInput == Vector3(0, 0, 0)) ;
-        animator.SetFloat("SpeedBlend", GetComponent<NavMeshAgent>().speed);
+        if (moveInput == new Vector3(0, 0, 0))
+        {
+            animator.SetFloat("SpeedBlend", 0);
+        }
+        else
+        {
+            animator.SetFloat("SpeedBlend", GetComponent<NavMeshAgent>().speed);
+        }
+      
         // --- Blokada akcji/ruchu ---
         if (isActionLocked)
         {
