@@ -8,6 +8,7 @@ public class KebabController : MonoBehaviour
 
     public void Kebabownia()
     {
+        SoundManager.Instance.PlaySFX("Kebab");
         UnkebabPrefab.SetActive(false);
         KebabPrefab.SetActive(true);
     }

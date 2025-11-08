@@ -166,12 +166,12 @@ public class PlayerController : MonoBehaviour
     {
         float startTime = Time.time;
         float blinkInterval = 0.2f;
-
+        if (animator != null) animator.SetTrigger("Hit");
         while (Time.time < startTime + duration)
         {
             if (playerRenderer != null)
             {
-                playerRenderer.enabled = !playerRenderer.enabled; // Mruganie
+               // playerRenderer.enabled = !playerRenderer.enabled; // Mruganie
             }
             yield return new WaitForSeconds(blinkInterval);
         }
