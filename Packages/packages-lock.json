@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "bz-soft.ragdoll-helper": {
+      "version": "file:bz-soft.ragdoll-helper",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.jiaozi158.unityssgiurp": {
       "version": "https://github.com/jiaozi158/UnitySSGIURP.git",
       "depth": 0,
