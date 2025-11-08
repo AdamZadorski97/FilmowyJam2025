@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7439967730965426317
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70e5811d9aeb3e04fb48321dce46f24d, type: 3}
+  m_Name: HighlightsManagerURP
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  DepthLayerMask:
+    m_Bits: 0
+  renderingEvent: 0
+  renderSceneDepth: 1
+  isWorking: 1
+--- !u!114 &-416654000063915415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d111dc2a0b22b142804f4d59508b893, type: 3}
+  m_Name: EPO Feature
+  m_EditorClassIdentifier: 
+  m_Active: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27,7 +58,9 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: 7833122117494664109}
   - {fileID: 8894063128603333156}
-  m_RendererFeatureMap: ad6b866f10d7b46c24124dee4a0f6e7b
+  - {fileID: 0}
+  - {fileID: -416654000063915415}
+  m_RendererFeatureMap: ad6b866f10d7b46c24124dee4a0f6e7b73cf6f6fc4ecbf98
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
