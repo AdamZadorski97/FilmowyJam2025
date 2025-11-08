@@ -7,7 +7,26 @@ public class HoldInteractor : MonoBehaviour
     [SerializeField]
     private float maxHoldTime = 2.0f;
 
+    // --- Zmiana 2: Dodanie publicznej zmiennej/właściwości stanu trzymania (0 do 1) ---
+    // Używamy GetHoldProgress() jako implementacji dla nowej właściwości.
+    /// <summary>
+    /// Zwraca aktualny postęp trzymania jako wartość od 0.0 do 1.0 (alias dla GetHoldProgress()).
+    /// </summary>
+    public float HoldProgress
+    {
+        get
+        {
+            return GetHoldProgress();
+        }
+    }
+    // -----------------------------------------------------------------------------------
+
     [Header("Eventy")]
+    // --- Zmiana 1: Dodanie eventu startu przytrzymania ---
+    [Tooltip("Wywoływane, gdy gracz ZACZYNA przytrzymywać przycisk.")]
+    public UnityEvent OnHoldStart;
+    // -------------------------------------------------------
+
     [Tooltip("Wywoływane, gdy gracz PRAWIDŁOWO przytrzyma przycisk przez 'maxHoldTime'")]
     public UnityEvent OnHoldComplete;
 
@@ -30,6 +49,7 @@ public class HoldInteractor : MonoBehaviour
     }
     // --- KONIEC DEBUG ---
 
+    // --- Metoda GetHoldProgress() została przywrócona zgodnie z Twoją prośbą ---
     public float GetHoldProgress()
     {
         if (maxHoldTime <= 0) return 0;
@@ -61,7 +81,8 @@ public class HoldInteractor : MonoBehaviour
             {
                 Log("...Gracz trzymał przycisk, ale wyszedł. ANULOWANIE.");
 
-                HoldProgressService.Hide();
+                // Użycie statycznego serwisu (który przekieruje do Singletona)
+                HoldProgressService.Hide(currentPlayerInTrigger.playerID);
                 currentPlayerInTrigger.OnActionFinished.Invoke(); // WYZWALANIE ZAKOŃCZENIA
             }
 
@@ -78,11 +99,14 @@ public class HoldInteractor : MonoBehaviour
         if (currentPlayerInTrigger == null || holdWasCompleted) return;
 
         bool isInteractPressed = false;
-        if (currentPlayerInTrigger.playerID == 1)
+        int currentID = currentPlayerInTrigger.playerID;
+
+        // Zakładamy, że PlayerController i InputController są poprawnie zaimplementowane
+        if (currentID == 1)
         {
             isInteractPressed = InputController.Instance.Player1Actions.interactionAction.IsPressed;
         }
-        else if (currentPlayerInTrigger.playerID == 2)
+        else if (currentID == 2)
         {
             isInteractPressed = InputController.Instance.Player2Actions.interactionAction.IsPressed;
         }
@@ -92,11 +116,15 @@ public class HoldInteractor : MonoBehaviour
         {
             if (!isHolding)
             {
-                // Pierwsza klatka przytrzymania
                 Log("Gracz ZACZĄŁ trzymać przycisk.");
                 isHolding = true;
 
-                HoldProgressService.Show(this);
+                // --- Zmiana 1: Wywołanie eventu OnHoldStart ---
+                OnHoldStart.Invoke();
+                // ---------------------------------------------
+
+                // Użycie statycznego serwisu (który przekieruje do Singletona)
+                HoldProgressService.Show(this, currentID);
                 currentPlayerInTrigger.OnActionStarted.Invoke(); // WYZWALANIE ROZPOCZĘCIA
             }
 
@@ -107,7 +135,8 @@ public class HoldInteractor : MonoBehaviour
                 Log("SUKCES! Osiągnięto maxHoldTime.");
 
                 OnHoldComplete.Invoke();
-                HoldProgressService.Hide();
+                // Użycie statycznego serwisu (który przekieruje do Singletona)
+                HoldProgressService.Hide(currentID);
 
                 currentPlayerInTrigger.OnActionFinished.Invoke(); // WYZWALANIE ZAKOŃCZENIA
                 holdWasCompleted = true;
@@ -118,10 +147,10 @@ public class HoldInteractor : MonoBehaviour
             // Gracz NIE trzyma przycisku
             if (isHolding)
             {
-                // Gracz właśnie puścił przycisk
                 Log("Gracz PUŚCIŁ przycisk przed czasem. ANULOWANIE.");
 
-                HoldProgressService.Hide();
+                // Użycie statycznego serwisu (który przekieruje do Singletona)
+                HoldProgressService.Hide(currentID);
                 currentPlayerInTrigger.OnActionFinished.Invoke(); // WYZWALANIE ZAKOŃCZENIA (anulowanie)
 
                 isHolding = false;
