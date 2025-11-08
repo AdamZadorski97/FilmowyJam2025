@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5623669149164507464}
   - component: {fileID: 4710055670384543179}
   - component: {fileID: 8457248461346530231}
+  - component: {fileID: 2091078881121411223}
   m_Layer: 0
   m_Name: Desk
   m_TagString: Untagged
@@ -103,3 +104,17 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 0, z: 0}
   m_TimeToStationary: 0.5
+--- !u!114 &2091078881121411223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683476128223256754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e640fddd780989d42a16749535f672dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShatterVersion: {fileID: 7562115881873554475, guid: 3e39cfe5a4532954aa5bec64ffdf873e, type: 3}
+  Offset: {x: -0.043, y: 0.195, z: 0}
