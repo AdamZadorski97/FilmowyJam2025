@@ -205,6 +205,7 @@ public class BotPatrol : MonoBehaviour
     {
         agent.isStopped = true;
         SoundManager.Instance.PlaySFX("baseball");
+        StopAllCoroutines();
         StartCoroutine(TriggerFinalAttackEnum());
     }
     IEnumerator TriggerFinalAttackEnum()
@@ -291,7 +292,7 @@ public class BotPatrol : MonoBehaviour
                     isOnAttackCooldown = true;
 
                     OnPlayerCaught.Invoke(player);
-                    StopAllCoroutines();
+                    
                     StartCoroutine(WaitAfterCatchAndResumePatrol(attackAnimationDuration));
                     return;
                 }
