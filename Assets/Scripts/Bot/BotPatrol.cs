@@ -2,6 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Events; // Wymagane dla UnityEvent z parametrem
+
+/// <summary>
+/// Kontroluje bota AI, który patroluje listę punktów (waypoints).
+/// Reaguje na wykrycie gracza przez TeacherFOV i kontroluje animacje.
+/// </summary>
+/// 
+
+
 
 // NOWA KLASA: Definiuje właściwości każdego punktu patrolu.
 [System.Serializable]
@@ -17,16 +26,20 @@ public class PatrolWaypoint
     public Vector3 targetRotation;
 
     [Tooltip("Nazwa parametru Triggera lub Boola w Animatorze do ustawienia podczas postoju (np. 'LookAround').")]
-    public string idleAnimationTrigger = ""; // <--- NOWE POLE STRING
+    public string idleAnimationTrigger = "";
 }
 
-/// <summary>
-/// Kontroluje bota AI, który patroluje listę punktów (waypoints).
-/// Reaguje na wykrycie gracza przez TeacherFOV i kontroluje animacje.
-/// </summary>
+
 [RequireComponent(typeof(NavMeshAgent))]
 public class BotPatrol : MonoBehaviour
 {
+    // --- NOWY EVENT ---
+    [Header("Eventy Akcji")]
+    [Tooltip("Wywoływane, gdy bot złapie gracza (bliskość < catchDistance) podczas ALARMU. Oczekuje PlayerController.")]
+    // UnityEvent<T> wymaga, aby PlayerController był dostępny w zasięgu (using UnityEngine; jest).
+    public UnityEvent<PlayerController> OnPlayerCaught;
+    // ------------------
+
     [Header("Referencje")]
     [SerializeField]
     private NavMeshAgent agent;
@@ -48,6 +61,11 @@ public class BotPatrol : MonoBehaviour
     [Tooltip("Jak szybko bot obraca się w docelowy kierunek podczas postoju.")]
     private float rotationSpeed = 5f;
 
+    [Header("Ustawienia Pościgu (NOWE)")]
+    [SerializeField]
+    [Tooltip("Maksymalna odległość do gracza, by uznać go za 'złapanego' i wywołać akcję.")]
+    private float catchDistance = 2.0f; // Dystans 2 jednostek
+
     // Stringi do wywoływania animacji
     private const string ANIM_IS_WALKING = "IsWalking";
 
@@ -55,24 +73,20 @@ public class BotPatrol : MonoBehaviour
     private int currentWaypointIndex = 0;
     private float waitTimer = 0f;
     private BotState currentState;
+    private Vector3 lastKnownPlayerPosition; // Ostatnia znana pozycja gracza
 
     private enum BotState
     {
         Moving,
         Waiting,
-        Alert
+        Alert,
+        Chase  // Pogoń do ostatniej znanej pozycji
     }
 
     private void Awake()
     {
-        if (agent == null)
-        {
-            agent = GetComponent<NavMeshAgent>();
-        }
-        if (animator == null)
-        {
-            animator = GetComponentInChildren<Animator>();
-        }
+        if (agent == null) agent = GetComponent<NavMeshAgent>();
+        if (animator == null) animator = GetComponentInChildren<Animator>();
     }
 
     private void Start()
@@ -98,41 +112,38 @@ public class BotPatrol : MonoBehaviour
     // Metoda wywoływana przez event TeacherFOV.OnPlayerDetected
     private void OnPlayerDetected()
     {
-        if (currentState != BotState.Alert)
+        // Sprawdzamy, czy wykryto gracza
+        if (teacherFOV.DetectedPlayer != null)
         {
-            currentState = BotState.Alert;
+            // Zapisz pozycję gracza i rozpocznij pościg (lub odśwież cel, jeśli już gonimy)
+            lastKnownPlayerPosition = teacherFOV.DetectedPlayer.transform.position;
 
-            // Zatrzymaj agenta i animację
-            if (agent.enabled)
+            if (currentState != BotState.Chase)
             {
-                agent.isStopped = true;
+                currentState = BotState.Chase;
+                StartChase(lastKnownPlayerPosition);
+                Debug.Log($"[BotPatrol] GRACZ WYKRYTY! Przechodzę w stan Chase do: {lastKnownPlayerPosition}.");
             }
-
-            // Wyłącz animację chodu
-            SetAnimationBool(ANIM_IS_WALKING, false);
-            Debug.Log("[BotPatrol] GRACZ WYKRYTY! Przechodzę w stan Alert.");
+            else
+            {
+                // Jeśli już gonimy, po prostu odśwież cel
+                agent.SetDestination(lastKnownPlayerPosition);
+            }
         }
     }
 
     // Metoda wywoływana, gdy gracz zniknie z FOV
     private void OnPlayerLost()
     {
-        if (currentState == BotState.Alert)
+        if (currentState == BotState.Chase)
         {
-            // Wznów patrol z miejsca, w którym się zatrzymał
-            if (agent.enabled)
-            {
-                agent.isStopped = false;
-            }
-
-            if (waypoints[currentWaypointIndex].waitTime > 0f && agent.remainingDistance < arrivalThreshold * 2f)
-            {
-                StartWaiting();
-            }
-            else
-            {
-                StartMovingToNextWaypoint();
-            }
+            // Pozostajemy w Chase, kontynuując ruch do ostatniej znanej pozycji
+            Debug.Log("[BotPatrol] Gracz stracony, ale kontynuuję do ostatniej znanej pozycji.");
+        }
+        else if (currentState == BotState.Alert)
+        {
+            // Wznawiamy patrol (jeśli byliśmy tylko w trybie Alert)
+            StartMovingToNextWaypoint();
             Debug.Log("[BotPatrol] Gracz stracony. Wznawiam patrol.");
         }
     }
@@ -146,46 +157,39 @@ public class BotPatrol : MonoBehaviour
         switch (currentState)
         {
             case BotState.Moving:
-                SetAnimationBool(ANIM_IS_WALKING, true); // <--- ANIMACJA WALK
+                SetAnimationBool(ANIM_IS_WALKING, true);
                 HandleMovingState();
                 break;
             case BotState.Waiting:
-                SetAnimationBool(ANIM_IS_WALKING, false); // <--- ANIMACJA IDLE
+                SetAnimationBool(ANIM_IS_WALKING, false);
                 HandleWaitingState();
                 break;
             case BotState.Alert:
-                SetAnimationBool(ANIM_IS_WALKING, false); // <--- ANIMACJA IDLE (Alarm)
-                // W tym stanie nic nie robimy poza animacją
+                SetAnimationBool(ANIM_IS_WALKING, false);
+                break;
+            case BotState.Chase: // NOWY STAN
+                SetAnimationBool(ANIM_IS_WALKING, true);
+                HandleChaseState();
                 break;
         }
     }
 
-    /// <summary>
-    /// Wywołuje parametr bool w Animatorze za pomocą stringa.
-    /// </summary>
+    // --- Metody Pomocnicze do Animacji ---
+
     private void SetAnimationBool(string paramName, bool value)
     {
-        if (animator != null)
-        {
-            animator.SetBool(paramName, value);
-        }
+        if (animator != null) animator.SetBool(paramName, value);
     }
 
-    /// <summary>
-    /// Wywołuje Trigger w Animatorze za pomocą stringa.
-    /// </summary>
     private void SetAnimationTrigger(string paramName)
     {
-        if (animator != null && !string.IsNullOrEmpty(paramName))
-        {
-            animator.SetTrigger(paramName);
-        }
+        if (animator != null && !string.IsNullOrEmpty(paramName)) animator.SetTrigger(paramName);
     }
 
+    // --- Obsługa Stanów ---
 
     private void HandleMovingState()
     {
-        // Sprawdź, czy dotarliśmy do celu
         if (!agent.pathPending && agent.remainingDistance <= arrivalThreshold)
         {
             StartWaiting();
@@ -203,13 +207,10 @@ public class BotPatrol : MonoBehaviour
             rotationSpeed * Time.deltaTime
         );
 
-        // Odliczaj czas
         waitTimer -= Time.deltaTime;
 
-        // Jeśli czas minął, ruszaj do następnego punktu
         if (waitTimer <= 0f)
         {
-            // Resetuj trigger animacji customowej przed ruszeniem
             if (!string.IsNullOrEmpty(currentWaypoint.idleAnimationTrigger))
             {
                 animator.ResetTrigger(currentWaypoint.idleAnimationTrigger);
@@ -220,36 +221,73 @@ public class BotPatrol : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Przełącza bota w stan OCZEKIWANIA i wywołuje animację z punktu.
-    /// </summary>
+    private void StartChase(Vector3 targetPosition)
+    {
+        currentState = BotState.Chase;
+        agent.updateRotation = true;
+        agent.isStopped = false;
+
+        agent.SetDestination(targetPosition);
+    }
+
+    private void HandleChaseState()
+    {
+        // 1. Sprawdzenie warunków złapania
+        PlayerController player = teacherFOV.DetectedPlayer;
+
+        if (player != null)
+        {
+            float distToPlayer = Vector3.Distance(transform.position, player.transform.position);
+
+            if (distToPlayer <= catchDistance)
+            {
+                Debug.Log($"[BotPatrol] Gracz złapany w promieniu {catchDistance}m! Wywołuję zerowanie postępu.");
+                OnPlayerCaught.Invoke(player); // WYWOŁANIE AKCJI ZŁAPANIA
+
+                // Zatrzymujemy się i czekamy przed wznowieniem patrolu
+                StartCoroutine(WaitAfterCatchAndResumePatrol(1.0f));
+                return;
+            }
+        }
+
+        // 2. Sprawdzenie, czy bot dotarł do celu (ostatniej znanej pozycji)
+        if (!agent.pathPending && agent.remainingDistance <= arrivalThreshold)
+        {
+            Debug.Log("[BotPatrol] Dotarłem do ostatniej znanej pozycji. Wznawiam patrol.");
+            StartMovingToNextWaypoint();
+        }
+    }
+
+    private IEnumerator WaitAfterCatchAndResumePatrol(float delay)
+    {
+        agent.isStopped = true;
+        SetAnimationBool(ANIM_IS_WALKING, false);
+
+        yield return new WaitForSeconds(delay);
+
+        // Po krótkiej chwili wracamy do patrolu, do bieżącego (ostatniego) punktu
+        StartMovingToNextWaypoint();
+    }
+
     private void StartWaiting()
     {
         currentState = BotState.Waiting;
 
-        // Ustaw czas oczekiwania
         waitTimer = waypoints[currentWaypointIndex].waitTime;
 
-        // Dezaktywuj automatyczną rotację agenta (NavMeshAgent) i zatrzymaj go
         agent.updateRotation = false;
         agent.isStopped = true;
 
-        // Wywołaj animację zdefiniowaną w punkcie (jako Trigger lub Bool)
         SetAnimationTrigger(waypoints[currentWaypointIndex].idleAnimationTrigger);
     }
 
-    /// <summary>
-    /// Przełącza bota w stan RUCHU i ustawia nowy cel.
-    /// </summary>
     private void StartMovingToNextWaypoint()
     {
         currentState = BotState.Moving;
 
-        // Aktywuj automatyczną rotację agenta i wznów ruch
         agent.updateRotation = true;
         agent.isStopped = false;
 
-        // Ustaw cel w NavMeshAgent
         PatrolWaypoint targetWaypoint = waypoints[currentWaypointIndex];
         if (targetWaypoint.point != null)
         {
@@ -261,47 +299,32 @@ public class BotPatrol : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Rysuje wizualizacje Gizmos w edytorze.
-    /// </summary>
+    // --- OnDrawGizmos (bez zmian) ---
     private void OnDrawGizmos()
     {
-        if (waypoints == null || waypoints.Count < 1)
-        {
-            return;
-        }
+        if (waypoints == null || waypoints.Count < 1) return;
 
-        // Rysuj punkty i połączenia
         for (int i = 0; i < waypoints.Count; i++)
         {
             PatrolWaypoint wp = waypoints[i];
-
-            // Jeśli punkt istnieje
             if (wp.point != null)
             {
-                // Rysuj sferę punktu
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawWireSphere(wp.point.position, 0.5f);
 
-                // Rysuj linię pokazującą kierunek patrzenia podczas postoju
                 Quaternion lookRot = Quaternion.Euler(wp.targetRotation);
                 Vector3 direction = lookRot * Vector3.forward;
                 Gizmos.color = Color.red;
                 Gizmos.DrawRay(wp.point.position + Vector3.up * 0.1f, direction * 2f);
 
-                // Rysuj linię do następnego punktu (kolejność patrolu)
                 Gizmos.color = Color.white;
                 int nextIndex = (i + 1) % waypoints.Count;
                 Transform nextPoint = waypoints[nextIndex].point;
 
-                if (nextPoint != null)
-                {
-                    Gizmos.DrawLine(wp.point.position, nextPoint.position);
-                }
+                if (nextPoint != null) Gizmos.DrawLine(wp.point.position, nextPoint.position);
             }
         }
 
-        // Rysuj aktualną trasę NavMeshAgent (tylko w trybie Play)
         if (Application.isPlaying && agent != null && agent.hasPath)
         {
             Gizmos.color = Color.blue;
