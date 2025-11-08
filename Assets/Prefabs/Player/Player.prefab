@@ -136,9 +136,9 @@ MonoBehaviour:
   OnActionFinished:
     m_PersistentCalls:
       m_Calls: []
-  baseMoveSpeed: 2
+  baseMoveSpeed: 1.6
   runSpeed: 4
-  sneakSpeed: 1
+  sneakSpeed: 0.4
   accelerationRate: 5
   rotationSpeed: 10
   jumpForce: 5

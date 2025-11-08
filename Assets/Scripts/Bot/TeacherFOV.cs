@@ -43,16 +43,13 @@ public class TeacherFOV : MonoBehaviour
     {
         FindVisiblePlayer();
 
-        // --- Obsługa eventów detekcji ---
         if (detectedPlayer != null && !wasPlayerDetectedLastFrame)
         {
-            // Gracz WŁAŚNIE został wykryty
             OnPlayerDetected.Invoke();
             wasPlayerDetectedLastFrame = true;
         }
         else if (detectedPlayer == null && wasPlayerDetectedLastFrame)
         {
-            // Gracz WŁAŚNIE zniknął
             OnPlayerLost.Invoke();
             wasPlayerDetectedLastFrame = false;
         }
@@ -76,9 +73,6 @@ public class TeacherFOV : MonoBehaviour
             {
                 // 5. Sprawdź LINIĘ WZROKU (czy nie ma przeszkód)
                 float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
-
-                if (distanceToPlayer < 2)
-                    ScoreService.ResetPoints(playerTransform.GetComponent<PlayerController>().playerID);
 
                 // Wystrzel promień OD NAUCZYCIELA DO GRACZA
                 if (!Physics.Raycast(transform.position, dirToPlayer, distanceToPlayer, obstacleMask))
