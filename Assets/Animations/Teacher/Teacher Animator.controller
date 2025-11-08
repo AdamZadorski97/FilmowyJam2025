@@ -231,6 +231,32 @@ AnimatorState:
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
+--- !u!1102 &-2742524375522066525
+AnimatorState:
+  serializedVersion: 6
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SmallHit
+  m_Speed: 1
+  m_CycleOffset: 0
+  m_Transitions: []
+  m_StateMachineBehaviours: []
+  m_Position: {x: 50, y: 50, z: 0}
+  m_IKOnFeet: 0
+  m_WriteDefaultValues: 1
+  m_Mirror: 0
+  m_SpeedParameterActive: 0
+  m_MirrorParameterActive: 0
+  m_CycleOffsetParameterActive: 0
+  m_TimeParameterActive: 0
+  m_Motion: {fileID: -4158655684863252039, guid: 25bea10fd55b2e74090bfd4ea56290e6, type: 3}
+  m_Tag: 
+  m_SpeedParameter: 
+  m_MirrorParameter: 
+  m_CycleOffsetParameter: 
+  m_TimeParameter: 
 --- !u!206 &-1097148133049186907
 BlendTree:
   m_ObjectHideFlags: 1
@@ -296,7 +322,14 @@ AnimatorStateMachine:
     m_Position: {x: -110, y: 410, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -5720412645667058005}
+<<<<<<< HEAD
     m_Position: {x: 40, y: 520, z: 0}
+=======
+    m_Position: {x: -110, y: 500, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: -2742524375522066525}
+    m_Position: {x: 200, y: 460, z: 0}
+>>>>>>> 5069910a5cc7ec6dee069a1bcec6fb7f7918525d
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
