@@ -98,11 +98,7 @@ public class HoldProgressManager : MonoBehaviour
             _interactorToTrackP2 = null;
         }
 
-        // NOWOŚĆ: Przyznanie punktów po pomyślnym zakończeniu (Hide jest wywoływane przez interaktor)
-        if (wasSuccessful)
-        {
-            ScoreService.AddPoints(playerID, pointsOnCompletion);
-        }
+       
     }
 
     private void Update()

@@ -49,6 +49,12 @@ public class HoldInteractor : MonoBehaviour
     }
     // --- KONIEC DEBUG ---
 
+    private void Start()
+    {
+        maxHoldTime += Random.Range(0, 10) * 0.01f;
+    }
+
+
     // --- Metoda GetHoldProgress() została przywrócona zgodnie z Twoją prośbą ---
     public float GetHoldProgress()
     {
@@ -130,8 +136,9 @@ public class HoldInteractor : MonoBehaviour
 
             currentHoldTime += Time.deltaTime;
 
-            if (currentHoldTime >= maxHoldTime)
+            if (currentHoldTime >= maxHoldTime && !holdWasCompleted)
             {
+                ScoreService.AddPoints(currentPlayerInTrigger.playerID, 10);
                 Log("SUKCES! Osiągnięto maxHoldTime.");
 
                 OnHoldComplete.Invoke();
