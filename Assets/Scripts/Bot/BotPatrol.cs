@@ -84,7 +84,7 @@ public class BotPatrol : MonoBehaviour
     [SerializeField]
     [Tooltip("Nazwa triggera animacji ataku (zwykłe złapanie).")]
     private string attackTrigger = "Attack";
-
+    private string softAttackTrigger = "SoftAttack";
     [SerializeField]
     [Tooltip("Nazwa triggera dla animacji odpoczynku (Rest/Search).")]
     private string restTrigger = "Rest";
@@ -92,7 +92,7 @@ public class BotPatrol : MonoBehaviour
     [SerializeField]
     [Tooltip("Nazwa triggera dla animacji ataku (Gdy gracz traci OSTATNIE życie).")]
     private string finalAttackTrigger = "FinalAttack";
-
+    public float finalAttackWaitTime;
     private bool isOnAttackCooldown = false;
 
     // --- NOWA STAŁA DLA PARAMETRU FLOAT ---
@@ -203,15 +203,26 @@ public class BotPatrol : MonoBehaviour
     /// </summary>
     public void TriggerFinalAttack()
     {
+        agent.isStopped = true;
+        SoundManager.Instance.PlaySFX("baseball");
+        StartCoroutine(TriggerFinalAttackEnum());
+    }
+    IEnumerator TriggerFinalAttackEnum()
+    {
+        waypoints = null;
+        SetAnimationTrigger(attackTrigger);
+        yield return new WaitForSeconds(finalAttackWaitTime);
+
         if (!string.IsNullOrEmpty(finalAttackTrigger))
         {
             SetAnimationTrigger(finalAttackTrigger);
             currentState = BotState.Alert;
-            agent.isStopped = true;
+            
             SetAnimationSpeedFloat(0f);
             agent.updateRotation = false;
         }
     }
+
 
     // --- Obsługa Eventów FOV ---
 
@@ -276,7 +287,7 @@ public class BotPatrol : MonoBehaviour
                 {
                     player.SetStunned(stunDuration, playerChaseCooldown);
 
-                    SetAnimationTrigger(attackTrigger);
+                    SetAnimationTrigger(softAttackTrigger);
                     isOnAttackCooldown = true;
 
                     OnPlayerCaught.Invoke(player);
