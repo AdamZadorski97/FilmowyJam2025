@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events; // Dodane dla UnityEvents
+using UnityEngine.Events;
 
 /// <summary>
 /// Odpowiada za pole widzenia (FOV) nauczyciela.
@@ -34,7 +34,7 @@ public class TeacherFOV : MonoBehaviour
     [SerializeField]
     [Tooltip("Aktualnie wykryty i widoczny gracz. Pojawi się tutaj.")]
     private PlayerController detectedPlayer;
-    private bool wasPlayerDetectedLastFrame = false; // Nowa zmienna stanu
+    private bool wasPlayerDetectedLastFrame = false;
 
     // --- Publiczna właściwość (Property) ---
     public PlayerController DetectedPlayer => detectedPlayer;
@@ -88,9 +88,7 @@ public class TeacherFOV : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Helper do rysowania Gizmos w Edytorze.
-    /// </summary>
+    // --- Helpery i Gizmos (bez zmian) ---
     private Vector3 DirFromAngle(float angleInDegrees)
     {
         angleInDegrees += transform.eulerAngles.y;
@@ -102,9 +100,6 @@ public class TeacherFOV : MonoBehaviour
         );
     }
 
-    /// <summary>
-    /// Rysuje pole widzenia w edytorze sceny.
-    /// </summary>
     private void OnDrawGizmos()
     {
         if (detectedPlayer != null)

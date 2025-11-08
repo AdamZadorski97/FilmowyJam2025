@@ -1,60 +1,42 @@
 using UnityEngine;
 
 /// <summary>
-/// Statyczny serwis do zarządzania globalnym paskiem postępu.
-/// Działa jako "most" do instancji prefabu UI.
+/// Statyczny serwis do zarządzania paskami postępu. 
+/// Działa jako "most" do instancji Singletona HoldProgressManager w scenie.
+/// **NAPRAWIA BŁĘDY KOMPILACJI CS7036 i CS1061.**
 /// </summary>
 public static class HoldProgressService
 {
-    private static GameObject _prefab;
-    private static HoldProgressManager _currentInstance; // Referencja do skryptu na prefabie
+    // Nie potrzebujemy już prefabu, ale zostawiamy Init, jeśli jest wywoływane gdzie indziej.
+ 
 
     /// <summary>
-    /// Inicjalizuje serwis. Musi być wywołane raz na starcie gry.
+    /// Pokazuje i aktywuje pasek postępu dla danego gracza.
     /// </summary>
-    public static void Init(GameObject prefab)
+    public static void Show(HoldInteractor interactorToTrack, int playerID)
     {
-        _prefab = prefab;
-    }
-
-    /// <summary>
-    /// Pokazuje i aktywuje pasek postępu, aby śledził dany interaktor.
-    /// </summary>
-    public static void Show(HoldInteractor interactorToTrack)
-    {
-        if (_prefab == null)
+        if (HoldProgressManager.Instance == null)
         {
-            Debug.LogError("HoldProgressService NIE ZOSTAŁ ZAINICJALIZOWANY! " +
-                           "Upewnij się, że masz w scenie HoldProgressManagerInitializer.");
+            Debug.LogError("HoldProgressManager (Singleton) nie został znaleziony w scenie! Upewnij się, że obiekt z tym skryptem istnieje.");
             return;
         }
 
-        // Jeśli instancja nie istnieje (np. pierwszy raz, lub po zmianie sceny), stwórz ją.
-        if (_currentInstance == null)
-        {
-            GameObject instanceObj = Object.Instantiate(_prefab);
-            _currentInstance = instanceObj.GetComponent<HoldProgressManager>();
-
-            if (_currentInstance == null)
-            {
-                Debug.LogError($"Prefab '{_prefab.name}' nie ma na sobie skryptu HoldProgressManager!", _prefab);
-                Object.Destroy(instanceObj); // posprzątaj
-                return;
-            }
-        }
-
-        // Przekaż polecenie do instancji
-        _currentInstance.Show(interactorToTrack);
+        // Przekazanie wywołania do Singletona
+        HoldProgressManager.Instance.Show(interactorToTrack, playerID);
     }
 
     /// <summary>
-    /// Ukrywa pasek postępu.
+    /// Ukrywa pasek postępu dla danego gracza.
     /// </summary>
-    public static void Hide()
+    public static void Hide(int playerID)
     {
-        if (_currentInstance != null)
+        if (HoldProgressManager.Instance == null)
         {
-            _currentInstance.Hide();
+            // Możemy po prostu zignorować, jeśli Singletona nie ma, bo to tylko Hide.
+            return;
         }
+
+        // Przekazanie wywołania do Singletona
+        HoldProgressManager.Instance.Hide(playerID);
     }
 }

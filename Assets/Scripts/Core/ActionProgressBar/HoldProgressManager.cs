@@ -1,123 +1,162 @@
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
-using TMPro; // **DODAJ TO!**
+using TMPro; // Wymagane dla TextMeshPro
 
 /// <summary>
-/// Główny skrypt 'driver' dla prefabu paska postępu.
-/// Mieszka na prefabie i wykonuje operacje (fade, update fill).
+/// Statyczny Manager UI (Singleton) do zarządzania postępem przytrzymania dla P1 i P2.
+/// Musi być umieszczony JEDEN RAZ na Canvasie w scenie.
 /// </summary>
-[RequireComponent(typeof(CanvasGroup))]
 public class HoldProgressManager : MonoBehaviour
 {
-    [Header("Referencje (z Prefaba)")]
-    [SerializeField]
-    [Tooltip("Obrazek, który będzie pełnił rolę paska postępu (musi być typu 'Filled')")]
-    private Image progressBarImage;
+    public static HoldProgressManager Instance { get; private set; }
 
-    [SerializeField]
-    [Tooltip("Opcjonalne: Tekst (TextMeshProUGUI) do wyświetlania % postępu")]
-    private TextMeshProUGUI progressText; // **NOWE POLE**
+    [Header("Komponenty UI - Paski Postępu")]
+    [SerializeField] private Image progressBarP1Image;
+    [SerializeField] private Image progressBarP2Image;
 
-    private CanvasGroup canvasGroup;
-    private Tweener fadeTween;
+    // NOWOŚĆ: Pola dla tekstu postępu TMPro
+    [Header("Komponenty UI - Tekst Postępu")]
+    [SerializeField] private TMP_Text progressTextP1;
+    [SerializeField] private TMP_Text progressTextP2;
 
-    // Interaktor, który obecnie śledzimy
-    private HoldInteractor trackedInteractor;
+    [Header("Ustawienia Gry")]
+    [Tooltip("Liczba punktów przyznawana za pomyślne ukończenie przytrzymania")]
+    [SerializeField] private int pointsOnCompletion = 10;
+
+    [Header("Status Śledzenia")]
+    private HoldInteractor _interactorToTrackP1;
+    private HoldInteractor _interactorToTrackP2;
+
+    private float _lastProgressP1 = 0f;
+    private float _lastProgressP2 = 0f;
 
     private void Awake()
     {
-        canvasGroup = GetComponent<CanvasGroup>();
-
-        // Upewnij się, że na starcie jest ukryty
-        canvasGroup.alpha = 0f;
-        if (progressBarImage != null)
+        if (Instance != null && Instance != this)
         {
-            progressBarImage.fillAmount = 0f;
+            Destroy(this.gameObject);
         }
         else
         {
-            Debug.LogError("HoldProgressManager: Prefab nie ma przypisanego 'progressBarImage'!");
-        }
+            Instance = this;
 
-        // **NOWA ZMIANA:** Ustawienie domyślnego tekstu na starcie
-        if (progressText != null)
+            // Inicjalizacja widoczności
+            if (progressBarP1Image != null) progressBarP1Image.gameObject.SetActive(false);
+            if (progressBarP2Image != null) progressBarP2Image.gameObject.SetActive(false);
+            if (progressTextP1 != null) progressTextP1.gameObject.SetActive(false);
+            if (progressTextP2 != null) progressTextP2.gameObject.SetActive(false);
+        }
+    }
+
+    public void Show(HoldInteractor interactorToTrack, int playerID)
+    {
+        if (playerID == 1)
         {
-            progressText.text = "0%";
+            if (progressBarP1Image == null) return;
+            progressBarP1Image.gameObject.SetActive(true);
+            if (progressTextP1 != null) progressTextP1.gameObject.SetActive(true);
+            _interactorToTrackP1 = interactorToTrack;
+            _lastProgressP1 = 0f;
+            UpdateProgressText(progressTextP1, 0f); // Ustaw na 0% na start
         }
-
-        // Ustaw, aby ten obiekt UI przetrwał zmiany sceny, tak jak manager
-        DontDestroyOnLoad(gameObject);
+        else if (playerID == 2)
+        {
+            if (progressBarP2Image == null) return;
+            progressBarP2Image.gameObject.SetActive(true);
+            if (progressTextP2 != null) progressTextP2.gameObject.SetActive(true);
+            _interactorToTrackP2 = interactorToTrack;
+            _lastProgressP2 = 0f;
+            UpdateProgressText(progressTextP2, 0f); // Ustaw na 0% na start
+        }
     }
 
     /// <summary>
-    /// Wewnętrzna funkcja pokazywania (wywoływana przez serwis).
+    /// Ukrywa odpowiedni pasek postępu i przyznaje punkty (jeśli akcja się powiodła).
     /// </summary>
-    public void Show(HoldInteractor interactorToTrack)
+    public void Hide(int playerID)
     {
-        this.trackedInteractor = interactorToTrack;
+        bool wasSuccessful = false;
 
-        if (trackedInteractor == null)
+        if (playerID == 1)
         {
-            Debug.LogError("HoldProgressManager.Show został wywołany z 'null' interactor!");
-            Hide(); // Ukryj, jeśli coś jest nie tak
-            return;
+            if (_interactorToTrackP1 != null && _interactorToTrackP1.GetHoldProgress() >= 1.0f)
+            {
+                wasSuccessful = true;
+            }
+            if (progressBarP1Image != null) progressBarP1Image.gameObject.SetActive(false);
+            if (progressTextP1 != null) progressTextP1.gameObject.SetActive(false);
+            _interactorToTrackP1 = null;
+        }
+        else if (playerID == 2)
+        {
+            if (_interactorToTrackP2 != null && _interactorToTrackP2.GetHoldProgress() >= 1.0f)
+            {
+                wasSuccessful = true;
+            }
+            if (progressBarP2Image != null) progressBarP2Image.gameObject.SetActive(false);
+            if (progressTextP2 != null) progressTextP2.gameObject.SetActive(false);
+            _interactorToTrackP2 = null;
         }
 
-        // Zresetuj pasek i pokaż go
-        progressBarImage.fillAmount = 0f;
-
-        // **NOWA ZMIANA:** Zresetuj tekst
-        if (progressText != null)
+        // NOWOŚĆ: Przyznanie punktów po pomyślnym zakończeniu (Hide jest wywoływane przez interaktor)
+        if (wasSuccessful)
         {
-            progressText.text = "0%";
+            ScoreService.AddPoints(playerID, pointsOnCompletion);
         }
-
-        if (fadeTween.IsActive()) fadeTween.Kill();
-        fadeTween = canvasGroup.DOFade(1f, 0.2f);
-    }
-
-    /// <summary>
-    /// Wewnętrzna funkcja ukrywania (wywoływana przez serwis).
-    /// </summary>
-    public void Hide()
-    {
-        if (fadeTween.IsActive()) fadeTween.Kill();
-        fadeTween = canvasGroup.DOFade(0f, 0.2f).OnComplete(() => {
-            // Po ukryciu, zresetuj i przestań śledzić
-            if (progressBarImage != null)
-            {
-                progressBarImage.fillAmount = 0f;
-            }
-            // **NOWA ZMIANA:** Zresetuj tekst po zniknięciu
-            if (progressText != null)
-            {
-                progressText.text = "0%";
-            }
-            this.trackedInteractor = null;
-        });
     }
 
     private void Update()
     {
-        // Jeśli nie śledzimy interaktora (bo jesteśmy ukryci), nic nie rób
-        if (trackedInteractor == null) return;
+        // Aktualizacja paska dla Gracza 1
+        UpdateProgress(
+            ref _interactorToTrackP1,
+            progressBarP1Image,
+            progressTextP1,
+            ref _lastProgressP1
+        );
 
-        // Pobierz aktualny postęp (w zakresie 0.0 do 1.0)
-        float progress = trackedInteractor.GetHoldProgress();
+        // Aktualizacja paska dla Gracza 2
+        UpdateProgress(
+            ref _interactorToTrackP2,
+            progressBarP2Image,
+            progressTextP2,
+            ref _lastProgressP2
+        );
+    }
 
-        // Aktualizuj fillAmount na podstawie postępu śledzonego interaktora
-        if (progressBarImage != null)
+    /// <summary>
+    /// Prywatna metoda ułatwiająca aktualizację i sprawdzająca, czy postęp zmienił się o co najmniej 1%.
+    /// </summary>
+    private void UpdateProgress(
+        ref HoldInteractor interactor,
+        Image progressBar,
+        TMP_Text progressText,
+        ref float lastProgress)
+    {
+        if (interactor == null || progressBar == null) return;
+
+        float currentProgress = interactor.GetHoldProgress();
+
+        // Zmniejszenie częstotliwości aktualizacji tekstu: aktualizujemy tylko, jeśli postęp zmienił się o co najmniej 1%
+        if (Mathf.Abs(currentProgress - lastProgress) >= 0.01f || currentProgress >= 1.0f)
         {
-            progressBarImage.fillAmount = progress;
+            // 1. Aktualizacja paska
+            progressBar.fillAmount = currentProgress;
+
+            // 2. Aktualizacja tekstu w formacie X%
+            UpdateProgressText(progressText, currentProgress);
+
+            // 3. Zapisanie aktualnego postępu
+            lastProgress = currentProgress;
         }
+    }
 
-        // **NOWA ZMIANA:** Aktualizuj tekst z procentowym postępem
-        if (progressText != null)
+    private void UpdateProgressText(TMP_Text text, float progress)
+    {
+        if (text != null)
         {
-            // Przelicz postęp na procent (0-100) i zaokrąglij do całości, dodając symbol %
-            int percent = Mathf.FloorToInt(progress * 100f);
-            progressText.text = $"{percent}%";
+            int percentage = Mathf.RoundToInt(progress * 100f);
+            text.text = $"{percentage}%";
         }
     }
 }
