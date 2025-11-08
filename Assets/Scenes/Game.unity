@@ -209,43 +209,43 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 19.2
+      value: 11.3
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 19.5
+      value: 3.9
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -49.2
+      value: -3
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.11151542
+      value: 0.7629437
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.6601361
+      value: -0.0052609793
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.15283322
+      value: 0.6458602
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.7269297
+      value: 0.027457174
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: -184.299
+      value: -177.507
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -94.70099
+      value: -99.54599
       objectReference: {fileID: 0}
     - target: {fileID: 168918747076801531, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 21.404007
+      value: 182.013
       objectReference: {fileID: 0}
     - target: {fileID: 8853069584351650616, guid: 683add9cd2944c04d84953faceae7148, type: 3}
       propertyPath: m_Name
