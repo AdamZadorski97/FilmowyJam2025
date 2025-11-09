@@ -65,6 +65,9 @@ public class TeacherFOV : MonoBehaviour
         // 3. Przejrzyj każdego znalezionego gracza
         foreach (Collider playerCollider in playersInRadius)
         {
+            PlayerController player = playerCollider.GetComponent<PlayerController>();
+            if (player == null) continue;
+
             Transform playerTransform = playerCollider.transform;
             Vector3 dirToPlayer = (playerTransform.position - transform.position).normalized;
 
@@ -77,9 +80,12 @@ public class TeacherFOV : MonoBehaviour
                 // Wystrzel promień OD NAUCZYCIELA DO GRACZA
                 if (!Physics.Raycast(transform.position, dirToPlayer, distanceToPlayer, obstacleMask))
                 {
-                    // ...to znaczy, że gracz jest widoczny!
-                    detectedPlayer = playerCollider.GetComponent<PlayerController>();
-                    return;
+                    // === KLUCZOWA POPRAWKA: Sprawdzenie, czy gracz wykonuje "alertującą" akcję ===
+                    if (player.IsPerformingAlertingAction)
+                    {
+                        detectedPlayer = player;
+                        return;
+                    }
                 }
             }
         }

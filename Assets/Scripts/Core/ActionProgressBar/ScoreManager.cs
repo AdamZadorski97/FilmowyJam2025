@@ -5,38 +5,13 @@ using UnityEngine.UI;
 using DG.Tweening;
 
 /// <summary>
-/// Klasa Singleton zarządzająca faktycznym stanem punktów i UI.
-/// MUSI być dołączona do obiektu w scenie (np. na głównym Canvasie).
+/// UPROSZCZONA WERSJA: Klasa Singleton zarządzająca stanem punktów i UI.
+/// BotPatrol będzie się odwoływał do tej instancji bezpośrednio.
 /// </summary>
 public class ScoreManager : MonoBehaviour
 {
-    // Singleton, który jest wymagany przez ScoreService
+    // Singleton
     public static ScoreManager Instance { get; private set; }
-
-    // --- REFERENCJA I SUBKRYPCJA ---
-    private static BotPatrol botPatrolReference;
-
-    public static void SetBotPatrolReference(BotPatrol bot)
-    {
-        botPatrolReference = bot;
-
-        // Podpinamy event złapania, jeśli ScoreManager już istnieje
-        if (Instance != null && bot != null)
-        {
-            botPatrolReference.OnPlayerCaught.AddListener(Instance.OnBotCaughtPlayer);
-        }
-    }
-
-    private void OnBotCaughtPlayer(PlayerController player)
-    {
-        // Ta metoda jest wywoływana przez BotPatrol.OnPlayerCaught (po cooldownie bota)
-        if (player != null)
-        {
-            // UWAGA: Zakładamy, że PlayerController ma publiczne pole int playerID.
-            ResetPoints(player.playerID);
-        }
-    }
-    // ------------------------------------------------
 
     // --- POLA DLA IKONEK HP I ANIMACJI ---
     [Header("Ikony HP Graczy")]
@@ -51,8 +26,8 @@ public class ScoreManager : MonoBehaviour
     // --------------------------------------------------------
 
     [Header("Limit Wpadek (HP)")]
-    [Tooltip("Maksymalna liczba resetów (wpadek) przed przegraną.")]
-    [SerializeField] private int maxFails = 2;
+    [Tooltip("Maksymalna liczba resetów (wpadek) przed przegraną. MUSI BYĆ WIĘKSZE NIŻ 0 (np. 2).")]
+    [SerializeField] private int maxFails = 2; // WAŻNE: Ustaw domyślnie na 2
 
     [Header("Stan Wpadek Graczy")]
     private int failsP1 = 0;
@@ -77,18 +52,22 @@ public class ScoreManager : MonoBehaviour
         else
         {
             Instance = this;
-
-            // JEŚLI REFERENCJA DO BOTA ISTNIEJE JUŻ PRZED AWAKE, podpinamy event.
-            if (botPatrolReference != null)
-            {
-                botPatrolReference.OnPlayerCaught.AddListener(OnBotCaughtPlayer);
-            }
+            Debug.Log("[ScoreManager] Singleton zainicjowany.");
 
             UpdateScoreUI(1);
             UpdateScoreUI(2);
             ResetHpIcons();
+
+            if (maxFails <= 0)
+            {
+                Debug.LogError("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                Debug.LogError("[ScoreManager] KRYTYCZNY BŁĄD: 'Max Fails' jest ustawione na 0. Proszę ustawić na 2 lub więcej w Inspektorze.");
+                Debug.LogError("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }
         }
     }
+
+    // --- USUNIĘTO SetBotPatrolReference i OnBotCaughtPlayer ---
 
     public void AddPoints(int playerID, int points)
     {
@@ -105,31 +84,43 @@ public class ScoreManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Resetuje punkty gracza, inkrementuje licznik wpadek (fails) i animuje zniknięcie ikonki HP.
+    /// NOWA METODA: Wywoływana przez Bota, gdy złapie gracza.
+    /// Rejestruje wpadkę, resetuje punkty i ZWRACA (return) true, jeśli to Game Over.
     /// </summary>
-    public void ResetPoints(int playerID)
+    /// <returns>True jeśli Game Over, False jeśli tylko Soft Attack.</returns>
+    public bool RecordPlayerFail(int playerID)
     {
+        int currentFails = 0;
+
         if (playerID == 1)
         {
             scoreP1 = 0;
             if (scoreTextP1 != null) scoreTextP1.text = scoreP1.ToString();
-
             failsP1++;
-
+            currentFails = failsP1;
             AnimateHpLoss(hpIconsP1, failsP1);
-
-            CheckForGameOver(playerID, failsP1);
         }
         else if (playerID == 2)
         {
             scoreP2 = 0;
             if (scoreTextP2 != null) scoreTextP2.text = scoreP2.ToString();
-
             failsP2++;
-
+            currentFails = failsP2;
             AnimateHpLoss(hpIconsP2, failsP2);
+        }
 
-            CheckForGameOver(playerID, failsP2);
+        Debug.Log($"[ScoreManager] Gracz {playerID}: Nowy stan wpadek: {currentFails}/{maxFails}.");
+
+        // Sprawdzenie Game Over
+        if (currentFails >= maxFails)
+        {
+            Debug.Log($"🛑 [ScoreManager] GRACZ {playerID} PRZEGRYWA! Zwracam TRUE (Game Over).");
+            return true; // Tak, to jest Game Over
+        }
+        else
+        {
+            Debug.Log($"[ScoreManager] Gracz {playerID} złapany. Zwracam FALSE (Soft Attack).");
+            return false; // Nie, to tylko Soft Attack
         }
     }
 
@@ -145,27 +136,7 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Sprawdza, czy gracz osiągnął limit wpadek. Wywołuje finalną animację.
-    /// </summary>
-    private void CheckForGameOver(int playerID, int currentFails)
-    {
-        if (currentFails >= maxFails)
-        {
-            Debug.Log($"🛑 GRACZ {playerID} PRZEGRAŁ! Osiągnięto limit wpadek ({maxFails}).");
-
-            // WYWOŁANIE FINALNEGO ATAKU NUCZYCIELA
-            if (botPatrolReference != null)
-            {
-                botPatrolReference.TriggerFinalAttack();
-            }
-
-        }
-        else
-        {
-            Debug.Log($"Gracz {playerID} został przyłapany! Wpadka {currentFails}/{maxFails}.");
-        }
-    }
+    // --- USUNIĘTO CheckForGameOver (logika przeniesiona do RecordPlayerFail) ---
 
     private void AnimateHpLoss(List<Image> hpIcons, int currentFailsCount)
     {
@@ -179,9 +150,7 @@ public class ScoreManager : MonoBehaviour
         if (iconToFade != null)
         {
             iconToFade.DOKill(true);
-
             Vector3 originalScale = iconToFade.transform.localScale;
-
             iconToFade.transform.DOScale(originalScale * scaleMultiplier, fadeDuration * 0.5f)
                 .OnComplete(() => {
                     iconToFade.DOFade(0f, fadeDuration * 0.5f);

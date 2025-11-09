@@ -38,8 +38,8 @@ public class StudentsAI : MonoBehaviour
     public float MinChatTime = 3f;
     public float MaxChatTime = 8f;
     // Domyślne prędkości (dostosuj do swoich animacji)
-    private float walkSpeed = 2.5f;
-    private float runSpeed = 5.0f;
+    private float walkSpeed = 1.5f;
+    private float runSpeed = 2.5f;
 
     // === Ustawienia Grupowania i Drzwi ===
     public float GroupChatRadius = 5f;
@@ -59,7 +59,8 @@ public class StudentsAI : MonoBehaviour
     private float chatDuration;
     private InteractionPoint currentPOI = null;
     public bool Edyp = false;
-
+    private float lastAnimatorSpeed = 0f;
+    private const float SpeedThreshold = 0.1f;
     [SerializeField] private VisualEffect Blood;
 
     void Start()
@@ -94,10 +95,49 @@ public class StudentsAI : MonoBehaviour
             animator.SetBool("IsSitting", true);
             return;
         }
-
+        agent.avoidancePriority = Random.Range(50, 91);
         StartCoroutine(AILoop());
     }
+    /// <summary>
+    /// Kontroluje animację ruchu, aktualizując ją tylko przy znaczącej zmianie
+    /// lub przy przejściu do/z pełnego postoju.
+    /// </summary>
+    private void ControlAnimatorSpeed(float currentVelocity)
+    {
+        float animatorTargetSpeed;
 
+        // Mapowanie prędkości NavMeshAgent do wartości Animatora (0.0f - 1.0f)
+        if (currentVelocity > 0f)
+        {
+            // Jeśli postać się porusza, znormalizuj prędkość NavMeshAgent do zakresu 0-1
+            // Przyjmujemy, że runSpeed jest maksymalną prędkością (2.5f)
+            animatorTargetSpeed = Mathf.Clamp(currentVelocity / runSpeed, 0.0f, 1.0f);
+
+            // Korekta: Jeśli porusza się wolno (chodzi), ogranicza do 0.5f,
+            // aby upewnić się, że nie jest to pełny bieg, jeśli agent tylko idzie.
+            if (agent.speed <= walkSpeed + 0.1f) // Sprawdza, czy intencja była "chód"
+            {
+                animatorTargetSpeed = Mathf.Clamp(animatorTargetSpeed, 0.0f, 0.5f);
+            }
+        }
+        else
+        {
+            // Jeśli NavMeshAgent stoi, prędkość = 0
+            animatorTargetSpeed = 0f;
+        }
+
+        // Warunek aktualizacji Animatora:
+        // 1. Zmiana jest większa niż próg (dla płynnego ruchu)
+        // LUB
+        // 2. Właśnie osiągnęliśmy lub opuściliśmy pełny postój (dla natychmiastowej reakcji na 0)
+        if (Mathf.Abs(animatorTargetSpeed - lastAnimatorSpeed) > SpeedThreshold ||
+            (animatorTargetSpeed == 0f && lastAnimatorSpeed > 0f) ||
+            (animatorTargetSpeed > 0f && lastAnimatorSpeed == 0f))
+        {
+            animator.SetFloat("Y", animatorTargetSpeed);
+            lastAnimatorSpeed = animatorTargetSpeed;
+        }
+    }
     void Update()
     {
         // Sprawdź gracza TYLKO jeśli postać jest wolna i w stanie Wandering/Idle
@@ -111,6 +151,10 @@ public class StudentsAI : MonoBehaviour
                 StartCoroutine(AILoop());
             }
         }
+
+        // === NOWA, KONTROLOWANA LOGIKA PRĘDKOŚCI DLA ANIMATORA ===
+        ControlAnimatorSpeed(agent.velocity.magnitude);
+        // ==========================================================
     }
 
     // Metoda wywoływana przez PlayerHitbox, gdy student zostanie uderzony
@@ -242,7 +286,7 @@ public class StudentsAI : MonoBehaviour
 
         // 1. Ustawienie parametrów biegu
         agent.speed = FleeSpeed;
-        animator.SetFloat("Y", 1.0f); // Bieganie (zakładamy, że 1.0f to animacja biegu)
+        // Bieganie (zakładamy, że 1.0f to animacja biegu)
         agent.isStopped = false;
 
         // Pętla kontynuuje, dopóki Gracz jest bliżej niż bezpieczna odległość LUB agent nie ma ścieżki
@@ -270,7 +314,6 @@ public class StudentsAI : MonoBehaviour
 
         // 5. Koniec ucieczki - powrót do stanu Idle/Wandering
         agent.isStopped = true;
-        animator.SetFloat("Y", 0f);
 
         // Powrót do stanu Wandering
         currentState = AIState.Wandering;
@@ -328,7 +371,6 @@ public class StudentsAI : MonoBehaviour
         // --- FAZA POŚCIGU ---
         agent.isStopped = false;
         agent.SetDestination(playerTransform.position);
-        animator.SetFloat("Y", 1.0f); // Bieganie do gracza
         agent.speed = runSpeed;
 
         // 1. Aktywne śledzenie i ruch, dopóki cel nie jest w zasięgu
@@ -399,7 +441,6 @@ public class StudentsAI : MonoBehaviour
         isPlayerEngaged = true;
 
         agent.isStopped = true;
-        animator.SetFloat("Y", 0f);
 
         Vector3 lookDirection = playerTransform.position - transform.position;
         lookDirection.y = 0;
@@ -413,13 +454,11 @@ public class StudentsAI : MonoBehaviour
                 float talkDistance = 2.0f;
                 agent.isStopped = false;
                 agent.SetDestination(playerTransform.position);
-                animator.SetFloat("Y", 0.5f);
                 agent.speed = walkSpeed;
 
                 yield return new WaitUntil(() => Vector3.Distance(transform.position, playerTransform.position) <= talkDistance || !agent.hasPath);
 
                 agent.isStopped = true;
-                animator.SetFloat("Y", 0f);
                 lookDirection = playerTransform.position - transform.position;
                 lookDirection.y = 0;
                 transform.rotation = Quaternion.LookRotation(lookDirection);
@@ -465,7 +504,6 @@ public class StudentsAI : MonoBehaviour
     {
         // ... (Kod Idle/Chat bez zmian)
         agent.isStopped = true;
-        animator.SetFloat("Y", 0f);
         chatDuration = Random.Range(MinChatTime, MaxChatTime);
 
         Vector3 meetingPoint;
@@ -475,14 +513,12 @@ public class StudentsAI : MonoBehaviour
         {
             agent.isStopped = false;
             agent.SetDestination(circlePosition);
-            animator.SetFloat("Y", 0.5f);
 
             yield return new WaitUntil(() =>
                 !agent.pathPending &&
                 (agent.remainingDistance < 0.5f || agent.pathStatus == NavMeshPathStatus.PathPartial));
 
             agent.isStopped = true;
-            animator.SetFloat("Y", 0f);
 
             Vector3 lookDirection = meetingPoint - transform.position;
             lookDirection.y = 0;
@@ -551,36 +587,81 @@ public class StudentsAI : MonoBehaviour
     // =============================
     // === STAN: WĘDRÓWKA LOSOWA === (BEZ ZMIAN)
     // =============================
+    // Zmodyfikowana metoda HandleWandering()
 
+    private float stuckCheckInterval = 5f; // Czas po jakim uznajemy AI za "zablokowaną"
+    private float timeSinceLastProgress = 0f;
     private IEnumerator HandleWandering()
     {
         Vector3 randomDestination;
 
+        // --- RESET LICZNIKA POSTĘPU NA POCZĄTKU NOWEGO RUCHU ---
+        timeSinceLastProgress = 0f;
+        agent.isStopped = false;
+        // --------------------------------------------------------
+
         if (GetPointOnNavMesh(transform.position + Random.insideUnitSphere * WanderRadius, WanderRadius, out randomDestination))
         {
-            agent.isStopped = false;
             agent.SetDestination(randomDestination);
+            agent.speed = (Random.value < 0.2f) ? runSpeed : walkSpeed;
 
-            float moveSpeed = Random.Range(0f, 1f) > 0.8f ? 1.0f : 0.5f;
-            animator.SetFloat("Y", moveSpeed);
-            agent.speed = (moveSpeed == 1.0f) ? runSpeed : walkSpeed;
+            yield return null; // Umożliwienie agentowi rozpoczęcia obliczania ścieżki
 
-            yield return null;
+            // Użyj pozostałej odległości jako punktu odniesienia dla "postępu"
+            float initialRemainingDistance = agent.remainingDistance;
 
             while (!agent.pathPending && agent.remainingDistance > 0.5f && agent.hasPath)
             {
-                if (agent.pathStatus == NavMeshPathStatus.PathPartial)
+                // === LOGIKA WYKRYWANIA ZABLOKOWANIA ===
+                if (agent.pathStatus == NavMeshPathStatus.PathComplete)
                 {
-                    if (CheckForDoor())
+                    // Sprawdzanie, czy postać się rusza (tj. velocity jest większe od zera)
+                    if (agent.velocity.magnitude < SpeedThreshold)
                     {
-                        yield return null;
+                        timeSinceLastProgress += Time.deltaTime;
+                    }
+                    else
+                    {
+                        // Resetuj, jeśli postać się rusza
+                        timeSinceLastProgress = 0f;
                     }
                 }
+                else if (agent.pathStatus != NavMeshPathStatus.PathComplete) // Zablokowany przez PathPartial/PathInvalid
+                {
+                    timeSinceLastProgress += Time.deltaTime;
+
+                    if (CheckForDoor())
+                    {
+                        // Daj więcej czasu na otwarcie drzwi
+                        timeSinceLastProgress = 0f;
+                    }
+                }
+
+                // Warunek ponownego losowania celu (5 sekund bez postępu)
+                if (timeSinceLastProgress >= stuckCheckInterval)
+                {
+                    Debug.LogWarning(gameObject.name + " jest ZABLOKOWANY/BEZ POSTĘPU od " + stuckCheckInterval + "s. Wylosowuję nowy cel.");
+                    timeSinceLastProgress = 0f; // Reset licznika
+                                                // Wychodzimy z pętli, co spowoduje wylosowanie nowego celu w następnej iteracji AILoop
+                    break;
+                }
+                // ======================================
+
+                if (agent.pathStatus == NavMeshPathStatus.PathPartial)
+                {
+                    CheckForDoor(); // Nadal sprawdzamy drzwi
+                }
+
                 yield return null;
             }
 
-            agent.isStopped = true;
-            animator.SetFloat("Y", 0f);
+            // Jeżeli pętla została przerwana przez 'break' (zablokowanie),
+            // nie ma potrzeby ustawiania agent.isStopped = true, bo i tak zaraz AI-Loop
+            // spróbuje ruszyć do nowego celu. 
+            if (timeSinceLastProgress < stuckCheckInterval)
+            {
+                agent.isStopped = true;
+            }
         }
         else
         {
@@ -608,7 +689,6 @@ public class StudentsAI : MonoBehaviour
         }
         agent.isStopped = false;
         agent.SetDestination(finalTargetPosition);
-        animator.SetFloat("Y", 0.5f);
 
         yield return new WaitUntil(() => !agent.pathPending && (agent.remainingDistance < 0.2f || agent.pathStatus == NavMeshPathStatus.PathPartial));
 
@@ -619,7 +699,6 @@ public class StudentsAI : MonoBehaviour
             yield break;
         }
         agent.isStopped = true;
-        animator.SetFloat("Y", 0f);
 
         if (currentPOI.Type != InteractionPoint.InteractionType.GroupChat)
         {
@@ -699,14 +778,27 @@ public class StudentsAI : MonoBehaviour
     // =============================
     // === METODY POMOCNICZE === (BEZ ZMIAN)
     // =============================
-
-    private bool CheckForDoor()
+    private float doorCheckCooldown = 0.4f; // Czas cooldownu
+    private float nextDoorCheckTime = 0f;
+private bool CheckForDoor()
     {
+        // === NOWA LOGIKA COOLDOWNU ===
+        // 1. Sprawdź, czy minął czas cooldownu
+        if (Time.time < nextDoorCheckTime)
+        {
+            return false;
+        }
+
+        // 2. Jeśli czas minął, ustaw następny czas sprawdzenia
+        nextDoorCheckTime = Time.time + doorCheckCooldown;
+        // ==============================
+
         Vector3 checkPosition = transform.position + transform.forward * 0.5f;
         Collider[] hitColliders = Physics.OverlapSphere(checkPosition, DoorCheckDistance);
 
         foreach (var hitCollider in hitColliders)
         {
+            // Zmiana: Upewniamy się, że nie jest to mylące (ToggleDoor jest wywoływany tylko raz)
             DoorController door = hitCollider.GetComponent<DoorController>();
 
             if (door != null)

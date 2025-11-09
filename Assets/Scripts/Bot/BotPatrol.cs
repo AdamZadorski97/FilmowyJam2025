@@ -12,13 +12,10 @@ public class PatrolWaypoint
 {
     [Tooltip("Transform punktu, do którego bot pójdzie.")]
     public Transform point;
-
     [Tooltip("Czas (w sekundach), jaki bot spędzi na tym punkcie.")]
     public float waitTime = 0f;
-
     [Tooltip("Kierunek (w stopniach, kąty Eulera), w którym bot ma patrzeć PODCZAS postoju.")]
     public Vector3 targetRotation;
-
     [Tooltip("Nazwa parametru Triggera lub Boola w Animatorze do ustawienia podczas postoju (np. 'LookAround').")]
     public string idleAnimationTrigger = "";
 }
@@ -27,11 +24,7 @@ public class PatrolWaypoint
 [RequireComponent(typeof(NavMeshAgent))]
 public class BotPatrol : MonoBehaviour
 {
-    // --- EVENT Z PARAMETREM ---
-    [Header("Eventy Akcji")]
-    [Tooltip("Wywoływane, gdy bot złapie gracza (bliskość < catchDistance). Oczekuje PlayerController.")]
-    public UnityEvent<PlayerController> OnPlayerCaught;
-    // --------------------------
+    // --- USUNIĘTO EVENT OnPlayerCaught ---
 
     [Header("Referencje")]
     [SerializeField]
@@ -39,12 +32,10 @@ public class BotPatrol : MonoBehaviour
     [SerializeField]
     private Animator animator;
     [SerializeField]
-    private TeacherFOV teacherFOV;
+    private TeacherFOV teacherFOV; // Zakładamy, że TeacherFOV posiada DetectedPlayer i eventy
 
     [Header("Ustawienia Prędkości")]
-    [Tooltip("Prędkość poruszania się bota podczas patrolu (Walking).")]
     [SerializeField] private float patrolSpeed = 3.5f;
-    [Tooltip("Prędkość poruszania się bota podczas pościgu (Running).")]
     [SerializeField] private float chaseSpeed = 6.0f;
 
     [Header("Ustawienia Patrolu")]
@@ -84,7 +75,7 @@ public class BotPatrol : MonoBehaviour
     [SerializeField]
     [Tooltip("Nazwa triggera animacji ataku (zwykłe złapanie).")]
     private string attackTrigger = "Attack";
-    private string softAttackTrigger = "SoftAttack";
+    public string softAttackTrigger = "SoftAttack";
     [SerializeField]
     [Tooltip("Nazwa triggera dla animacji odpoczynku (Rest/Search).")]
     private string restTrigger = "Rest";
@@ -105,6 +96,9 @@ public class BotPatrol : MonoBehaviour
     private BotState currentState;
     private Vector3 lastKnownPlayerPosition;
 
+    // NOWA FLAGA DLA BEZPIECZEŃSTWA
+    private bool isFinalAttackStarted = false;
+
     private enum BotState
     {
         Moving,
@@ -120,7 +114,7 @@ public class BotPatrol : MonoBehaviour
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
 
-        ScoreManager.SetBotPatrolReference(this);
+        // --- USUNIĘTO SetBotPatrolReference ---
     }
 
     private void Start()
@@ -140,13 +134,17 @@ public class BotPatrol : MonoBehaviour
         }
 
         agent.speed = patrolSpeed;
-
         StartMovingToNextWaypoint();
     }
 
     private void Update()
     {
-        if (waypoints.Count == null) return;
+        // Sprawdzamy flagę Game Over, aby zignorować ruch
+        if (isFinalAttackStarted)
+        {
+            SetAnimationSpeedFloat(0f);
+            return;
+        }
 
         // Ustawienie Float Speed w każdej klatce, z wyjątkiem stanów zastoju
         if (currentState != BotState.Waiting && currentState != BotState.Alert && currentState != BotState.Resting)
@@ -183,50 +181,17 @@ public class BotPatrol : MonoBehaviour
 
     // --- Metody Pomocnicze do Animacji ---
 
-    /// <summary>
-    /// Ustawia wartość parametru Float 'Speed' w Animatorze.
-    /// </summary>
     private void SetAnimationSpeedFloat(float speed)
     {
         if (animator != null) animator.SetFloat(ANIM_SPEED_FLOAT, speed);
     }
-
-    // Usunięta metoda SetAnimationBool, ponieważ używamy Floata
 
     private void SetAnimationTrigger(string paramName)
     {
         if (animator != null && !string.IsNullOrEmpty(paramName)) animator.SetTrigger(paramName);
     }
 
-    /// <summary>
-    /// Wywoływane przez ScoreManager, gdy gracz straci ostatnie życie.
-    /// </summary>
-    public void TriggerFinalAttack()
-    {
-        agent.isStopped = true;
-        SoundManager.Instance.PlaySFX("baseball");
-        StopAllCoroutines();
-        StartCoroutine(TriggerFinalAttackEnum());
-    }
-    IEnumerator TriggerFinalAttackEnum()
-    {
-        waypoints = null;
-        SetAnimationTrigger(attackTrigger);
-        agent.updateRotation = false;
-
-        yield return new WaitForSeconds(finalAttackWaitTime);
-        teacherFOV.DetectedPlayer.onPlayerKill();
-        if (!string.IsNullOrEmpty(finalAttackTrigger))
-        {
-            SetAnimationTrigger(finalAttackTrigger);
-            currentState = BotState.Alert;
-            
-            SetAnimationSpeedFloat(0f);
-        }
-
-        UIcontrollerPopUp.Instance.Fatality();
-    }
-
+    // --- USUNIĘTO TriggerFinalAttack() i TriggerFinalAttackEnum() (logika przeniesiona) ---
 
     // --- Obsługa Eventów FOV ---
 
@@ -235,6 +200,7 @@ public class BotPatrol : MonoBehaviour
         if (teacherFOV.DetectedPlayer != null)
         {
             if (teacherFOV.DetectedPlayer.IsInCooldown()) return;
+            if (isFinalAttackStarted) return; // Jeśli Game Over, ignoruj wykrycie
 
             lastKnownPlayerPosition = teacherFOV.DetectedPlayer.transform.position;
             chaseTimer = chaseRefreshTime;
@@ -243,6 +209,7 @@ public class BotPatrol : MonoBehaviour
             {
                 currentState = BotState.Chase;
                 StartChase(lastKnownPlayerPosition);
+                Debug.Log($"[BotPatrol] Wykryto gracza {teacherFOV.DetectedPlayer.playerID}. Zaczynam pościg."); // DEBUG
             }
             else
             {
@@ -253,9 +220,10 @@ public class BotPatrol : MonoBehaviour
 
     private void OnPlayerLost()
     {
-        if (currentState == BotState.Chase)
+        if (currentState == BotState.Chase && !isFinalAttackStarted)
         {
             currentState = BotState.Searching;
+            agent.SetDestination(lastKnownPlayerPosition); // Pogoń do ostatniej znanej pozycji
             Debug.Log("[BotPatrol] Gracz stracony. Kontynuuję pościg (Search) przez 5s.");
         }
     }
@@ -275,7 +243,7 @@ public class BotPatrol : MonoBehaviour
     {
         PlayerController player = teacherFOV.DetectedPlayer;
 
-        if (isOnAttackCooldown) return;
+        if (isOnAttackCooldown || isFinalAttackStarted) return;
         if (player != null && player.IsInCooldown()) return;
 
         if (player != null)
@@ -289,14 +257,19 @@ public class BotPatrol : MonoBehaviour
 
                 if (distToPlayer <= catchDistance)
                 {
+                    Debug.Log($"[BotPatrol] Złapano gracza {player.playerID}! Zatrzymuję się i pytam ScoreManager...");
+
+                    // 1. Zatrzymaj bota i zablokuj atak
+                    agent.isStopped = true;
+                    currentState = BotState.Alert; // Zatrzymanie
+                    isOnAttackCooldown = true; // Blokada
+
+                    // 2. Zestunuj gracza (zawsze)
                     player.SetStunned(stunDuration, playerChaseCooldown);
 
-                    SetAnimationTrigger(softAttackTrigger);
-                    isOnAttackCooldown = true;
+                    // 3. Uruchom korutynę, która zapyta ScoreManager i wykona atak
+                    StartCoroutine(HandleAttackLogic(player));
 
-                    OnPlayerCaught.Invoke(player);
-                    
-                    StartCoroutine(WaitAfterCatchAndResumePatrol(attackAnimationDuration));
                     return;
                 }
             }
@@ -306,6 +279,56 @@ public class BotPatrol : MonoBehaviour
             OnPlayerLost();
         }
     }
+
+    /// <summary>
+    /// NOWA KORUTYNA: Podejmuje decyzję o ataku po zapytaniu ScoreManagera.
+    /// </summary>
+    private IEnumerator HandleAttackLogic(PlayerController player)
+    {
+        // 1. Zapytaj ScoreManager, czy to Game Over
+        // Używamy Singletona, aby uzyskać dostęp
+        bool isGameOver = ScoreManager.Instance.RecordPlayerFail(player.playerID);
+
+        if (isGameOver)
+        {
+            // === FINAL ATTACK ===
+            Debug.Log("🛑 [BotPatrol] Decyzja: FINAL ATTACK.");
+            isFinalAttackStarted = true; // Użyj flagi, aby zatrzymać Update()
+            SetAnimationTrigger(finalAttackTrigger);
+            SoundManager.Instance.PlaySFX("baseball");
+            // Czekaj na długi czas przygotowania animacji
+            player.gameObject.GetComponent<NavMeshAgent>().enabled = false;
+            yield return new WaitForSeconds(finalAttackWaitTime);
+            Debug.Log($"[BotPatrol] WYWOŁUJĘ: SetAnimationTrigger('{finalAttackTrigger}')");
+            SetAnimationTrigger("bla");
+           
+            Debug.Log($"[BotPatrol] Wywołuję: onPlayerKill() na graczu {player.playerID}.");
+            
+            player.onPlayerKill();
+        
+            GetComponent<NavMeshAgent>().enabled = false;
+            UIcontrollerPopUp.Instance.Fatality();
+            // Bot pozostaje w stanie Alert, zatrzymany na zawsze
+        }
+        else
+        {
+            // === SOFT ATTACK ===
+            Debug.Log("[BotPatrol] Decyzja: SOFT ATTACK.");
+
+            // Odtwórz animację Soft Attack
+            SetAnimationTrigger(softAttackTrigger);
+
+            // Poczekaj na czas trwania animacji
+            yield return new WaitForSeconds(attackAnimationDuration);
+
+            Debug.Log("[BotPatrol] Soft Attack: Wznawiam patrol.");
+
+            // Wznów patrol
+            isOnAttackCooldown = false;
+            StartMovingToNextWaypoint(); // Użyj tej metody, aby poprawnie zresetować stan
+        }
+    }
+
 
     private void HandleSearchingState()
     {
@@ -400,7 +423,7 @@ public class BotPatrol : MonoBehaviour
 
         if (waitTimer <= 0f)
         {
-            if (!string.IsNullOrEmpty(currentWaypoint.idleAnimationTrigger))
+            if (!string.IsNullOrEmpty(currentWaypoint.idleAnimationTrigger) && animator != null)
             {
                 animator.ResetTrigger(currentWaypoint.idleAnimationTrigger);
             }
@@ -410,21 +433,7 @@ public class BotPatrol : MonoBehaviour
         }
     }
 
-    private IEnumerator WaitAfterCatchAndResumePatrol(float delay)
-    {
-        agent.isStopped = true;
-        SetAnimationSpeedFloat(0f); // Zatrzymanie animacji
-        agent.updateRotation = false;
-
-        yield return new WaitForSeconds(delay);
-
-        agent.updateRotation = true;
-
-        isOnAttackCooldown = false;
-
-        currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
-        StartMovingToNextWaypoint();
-    }
+    // --- USUNIĘTO WaitAfterCatchAndResumePatrol (logika przeniesiona) ---
 
     // --- OnDrawGizmos ---
     private void OnDrawGizmos()
@@ -446,9 +455,11 @@ public class BotPatrol : MonoBehaviour
 
                 Gizmos.color = Color.white;
                 int nextIndex = (i + 1) % waypoints.Count;
-                Transform nextPoint = waypoints[nextIndex].point;
-
-                if (nextPoint != null) Gizmos.DrawLine(wp.point.position, nextPoint.position);
+                if (nextIndex < waypoints.Count)
+                {
+                    Transform nextPoint = waypoints[nextIndex].point;
+                    if (nextPoint != null) Gizmos.DrawLine(wp.point.position, nextPoint.position);
+                }
             }
         }
 

@@ -1073,7 +1073,7 @@ MonoBehaviour:
   maxHealth: 100
   currentHealth: 0
   fleeDistance: 20
-  FleeSpeed: 7
+  FleeSpeed: 4
   WanderRadius: 30
   MinChatTime: 3
   MaxChatTime: 8
@@ -1091,11 +1091,11 @@ NavMeshAgent:
   m_GameObject: {fileID: 3123890445747286957}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.19
   m_Speed: 1.5
   m_Acceleration: 8
   avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_AngularSpeed: 900
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1

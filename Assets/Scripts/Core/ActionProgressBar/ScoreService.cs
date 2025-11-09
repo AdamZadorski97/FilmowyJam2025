@@ -42,7 +42,7 @@ public static class ScoreService
         {
             // Przekierowanie do metody w ScoreManager, która powinna zresetować stan punktacji
             // i wywołać aktualizację UI.
-            ManagerInstance.ResetPoints(playerID);
+        
 
             Debug.Log($"[ScoreService] Punkty gracza {playerID} zostały WYRZEROWANE (Kara od bota).");
         }

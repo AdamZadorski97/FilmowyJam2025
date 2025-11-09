@@ -144,6 +144,7 @@ public class SoundManager : MonoBehaviour
         {
             Debug.LogWarning($"SoundManager: SFX o nazwie '{soundName}' nie został znaleziony w słowniku.");
         }
+        Debug.Log("Play sound");
     }
     private void Start()
     {

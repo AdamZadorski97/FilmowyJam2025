@@ -61,6 +61,7 @@ public class HoldInteractor : MonoBehaviour
 
     private void Log(string message)
     {
+        return;
         if (enableDebugLogs)
         {
             Debug.Log($"[HoldInteractor - {gameObject.name}] {message}");

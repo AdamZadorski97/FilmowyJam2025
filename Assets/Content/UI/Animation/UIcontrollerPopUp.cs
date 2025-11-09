@@ -23,6 +23,8 @@ public class UIcontrollerPopUp : MonoBehaviour
             // Opcjonalnie: Jeśli ten kontroler ma przetrwać ładowanie scen.
             // DontDestroyOnLoad(this.gameObject);
         }
+        blackscreenMaterial.SetFloat(ProgressPropertyName, 1);
+        fatalityMaterial.SetFloat(ProgressPropertyName, 1);
     }
 
     // ------------------------------------

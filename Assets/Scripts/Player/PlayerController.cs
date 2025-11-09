@@ -8,6 +8,7 @@ using XInputDotNetPure;
 using UnityEngine.Events;
 using Sirenix.OdinInspector;
 using UnityEngine.VFX;
+using Unity.VisualScripting;
 
 public class PlayerController : MonoBehaviour
 {
@@ -76,6 +77,9 @@ public class PlayerController : MonoBehaviour
     public bool isSneaking = false;
     public bool isActionLocked = false;
 
+    // NOWA WŁAŚCIWOŚĆ POMOCNICZA DLA TEACHERFOV (Musi być publiczna)
+    public bool IsPerformingAlertingAction => isRunning || isSneaking || isActionLocked || currentAgentSpeed > baseMoveSpeed * 0.1f;
+
     public bool isCrouch;
     public bool isMoveObject;
     [SerializeField] private bool canJump = true;
@@ -126,7 +130,7 @@ public class PlayerController : MonoBehaviour
             punchHitbox = punchHitboxObject.GetComponent<PlayerHitbox>();
             if (punchHitbox != null) punchHitbox.ownerController = this; // Ustawienie właściciela
             punchHitboxObject.SetActive(false); // Domyślnie wyłączony
-           
+
         }
 
         if (kickHitboxObject != null)
@@ -165,6 +169,16 @@ public class PlayerController : MonoBehaviour
             agent.isStopped = true;
         }
 
+        // ZABLOKOWANIE ANIMACJI RUCHU (Poprawka dla stunu)
+        if (animator != null)
+        {
+            animator.SetBool("IsMoving", false);
+            animator.SetBool("IsRunning", false);
+            animator.SetBool("IsSneaking", false);
+            animator.SetBool("isCrouch", false);
+            animator.SetFloat("SpeedBlend", 0f); // Upewnienie się, że blend jest na 0
+        }
+
         // Ustawienie końca cooldownu dla nauczyciela (łączny czas)
         stunCooldownEndTime = Time.time + stunDuration + chaseCooldown;
 
@@ -174,11 +188,15 @@ public class PlayerController : MonoBehaviour
     public void onPlayerKill()
     {
         destroyController.AktywujDestrukcje();
-        animator.enabled = false;
+        if (animator != null) animator.enabled = false;
+        isStunned = true; // Upewnij się, że gracz pozostaje zablokowany
+        isActionLocked = true;
+        Debug.Log($"[PlayerController] Gracz {playerID} zabity (onPlayerKill)!");
     }
 
     private IEnumerator StunCoroutine(float duration)
     {
+        SoundManager.Instance.PlaySFX("hit");
         float startTime = Time.time;
         float blinkInterval = 0.2f;
         if (animator != null) animator.SetTrigger("Hit");
@@ -193,33 +211,39 @@ public class PlayerController : MonoBehaviour
             if (playerRenderer != null)
             {
                 moveInput = Vector3.zero;
-               // playerRenderer.enabled = !playerRenderer.enabled; // Mruganie
+                // playerRenderer.enabled = !playerRenderer.enabled; // Mruganie
             }
             yield return new WaitForSeconds(blinkInterval);
         }
 
-        // Koniec stunu (fizycznego)
-        if (playerRenderer != null)
+        // Koniec stunu (fizycznego) - Nie wyłączaj stunu jeśli gracz jest martwy
+        // POPRAWKA BŁĘDU CS0023: Zakładam, że IsDestroyed to metoda i musi być wywołana ().
+        if (destroyController != null && !destroyController.IsDestroyed())
         {
-            playerRenderer.enabled = true;
-        }
+            if (playerRenderer != null)
+            {
+                playerRenderer.enabled = true;
+            }
 
-        isStunned = false;
-        isActionLocked = false;
-        if (agent != null)
-        {
-            agent.isStopped = false;
-        }
+            isStunned = false;
+            isActionLocked = false;
+            if (agent != null)
+            {
+                agent.isStopped = false;
+            }
 
-        Debug.Log($"Gracz {playerID} jest wolny. Nauczyciel ma cooldown do {stunCooldownEndTime}s.");
+            Debug.Log($"[PlayerController] Gracz {playerID} jest wolny. Nauczyciel ma cooldown do {stunCooldownEndTime}s.");
+        }
     }
 
     private void Update()
     {
+
+        if(GetComponent<NavMeshAgent>().enabled == false) { return; }
+
         // 🛑 ZABEZPIECZENIE PRZED NullReferenceException (InputController.Instance)
         if (InputController.Instance == null)
         {
-            // Możesz zmienić na Debug.LogWarning jeśli to normalne, że jest ładowany później
             Debug.LogError("BŁĄD: InputController.Instance nie jest dostępny! Sprawdź kolejność wykonania skryptów.");
             return;
         }
@@ -228,15 +252,19 @@ public class PlayerController : MonoBehaviour
         Vector2 rawInput = Vector2.zero;
         float maxSpeed;
 
-        // --- Blokada akcji/ruchu ---
+        // --- Blokada akcji/ruchu (isStunned i isActionLocked blokują wszystko) ---
         if (isActionLocked || isStunned)
         {
             moveInput = Vector3.zero;
-            if (agent != null) agent.velocity = Vector3.zero;
+
+            // Wymuszenie zatrzymania animacji (poprawka dla Stunu)
             if (animator != null)
             {
                 animator.SetBool("IsMoving", false);
                 animator.SetBool("IsRunning", false);
+                animator.SetBool("IsSneaking", false);
+                animator.SetBool("isCrouch", false);
+                animator.SetFloat("SpeedBlend", 0f);
             }
             return;
         }
@@ -359,7 +387,7 @@ public class PlayerController : MonoBehaviour
             agent.speed = currentMoveSpeed;
         }
 
-        // --- Aktualizacja Animator SpeedBlend (NAPRAWIONA WERSJA) ---
+        // --- Aktualizacja Animator SpeedBlend ---
         if (animator != null && agent != null)
         {
             // POBIERZ FAKTYCZNĄ PRĘDKOŚĆ AGENTA
@@ -392,7 +420,7 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         // Ruch i Rotacja NavMeshAgent
-        if (agent != null && agent.enabled && !isStunned)
+        if (agent != null && agent.enabled && !isStunned && !isActionLocked)
         {
             Vector3 worldMovement = moveInput;
 
@@ -426,9 +454,9 @@ public class PlayerController : MonoBehaviour
                 agent.velocity = Vector3.zero;
             }
         }
-        else if (agent != null && isStunned)
+        else if (agent != null)
         {
-            // Zablokuj ruch i obrót NavMeshAgenta podczas stunu
+            // Zablokuj ruch i obrót NavMeshAgenta podczas stunu/akcji
             agent.velocity = Vector3.zero;
         }
     }
@@ -438,6 +466,7 @@ public class PlayerController : MonoBehaviour
     private void Crouch()
     {
         if (!canCrouch) return;
+        if (isActionLocked || isStunned) return;
 
         if (isCrouch)
         {
@@ -465,6 +494,8 @@ public class PlayerController : MonoBehaviour
 
     public void Interact()
     {
+        if (isActionLocked || isStunned) return;
+
         if (tempInteractorController != null)
         {
             tempInteractorController.OnInteract(this);
@@ -490,6 +521,8 @@ public class PlayerController : MonoBehaviour
 
     private void Jump()
     {
+        if (isActionLocked || isStunned) return;
+
         if (canJump && agent != null && agent.enabled)
         {
             agent.enabled = false;
@@ -500,7 +533,7 @@ public class PlayerController : MonoBehaviour
     // --- ZMODYFIKOWANE Metody walki (włączanie/wyłączanie Hitboxa) ---
     private void Punch()
     {
-        if (isActionLocked) return;
+        if (isActionLocked || isStunned) return;
 
         isActionLocked = true;
         if (canRotate && playerMesh != null && lastIntendedRotation != Quaternion.identity)
@@ -510,26 +543,23 @@ public class PlayerController : MonoBehaviour
 
         if (animator != null) animator.SetTrigger("Punch");
 
-        // === NOWA, UPROSZCZONA LOGIKA UDERZENIA NPC ===
-        // 1. Sprawdź, co jest w zasięgu (promień i przesunięcie przed modelem)
-        // Zmieniamy wywołanie na ogólne, bez LayerMask (sprawdza wszystko)
+        // === LOGIKA UDERZENIA NPC ===
         Collider[] hitObjects = Physics.OverlapSphere(transform.position + playerMesh.transform.forward * 0.5f, punchRange);
 
         foreach (Collider hitCollider in hitObjects)
         {
-            // 2. SPRAWDZAMY TYLKO, CZY MA KOMPONENT StudentsAI
             StudentsAI studentAI = hitCollider.GetComponent<StudentsAI>();
 
             if (studentAI != null)
             {
                 studentAI.GetHit(5); // 5 to obrażenia/punkty z Punch
                 GetHit();
-                break; // Uderzamy tylko pierwszego znalezionego NPC
+                break;
             }
         }
         // =========================================================
 
-        // Włączenie fizycznego Hitboxa (dla środowiska/innych graczy, jak dotychczas)
+        // Włączenie fizycznego Hitboxa 
         if (punchHitbox != null && punchHitboxObject != null)
         {
             punchHitbox.SetScoreDamage(5);
@@ -543,7 +573,7 @@ public class PlayerController : MonoBehaviour
 
     private void Kick()
     {
-        if (isActionLocked) return;
+        if (isActionLocked || isStunned) return;
 
         isActionLocked = true;
         if (canRotate && playerMesh != null && lastIntendedRotation != Quaternion.identity)
@@ -553,12 +583,11 @@ public class PlayerController : MonoBehaviour
 
         if (animator != null) animator.SetTrigger("Kick");
 
-        // === NOWA, UPROSZCZONA LOGIKA UDERZENIA NPC ===
+        // === LOGIKA UDERZENIA NPC ===
         Collider[] hitObjects = Physics.OverlapSphere(transform.position + playerMesh.transform.forward * 1.0f, kickRange);
 
         foreach (Collider hitCollider in hitObjects)
         {
-            // SPRAWDZAMY TYLKO, CZY MA KOMPONENT StudentsAI
             StudentsAI studentAI = hitCollider.GetComponent<StudentsAI>();
 
             if (studentAI != null)
@@ -570,7 +599,7 @@ public class PlayerController : MonoBehaviour
         }
         // =========================================================
 
-        // Włączenie fizycznego Hitboxa (dla środowiska/innych graczy, jak dotychczas)
+        // Włączenie fizycznego Hitboxa 
         if (kickHitbox != null && kickHitboxObject != null)
         {
             kickHitbox.SetScoreDamage(15);
@@ -591,7 +620,7 @@ public class PlayerController : MonoBehaviour
 
         yield return new WaitForSeconds(duration);
 
-        // NOWE: Wyłączenie Hitboxa po zakończeniu akcji
+        // Wyłączenie Hitboxa po zakończeniu akcji
         if (punchHitboxObject != null && punchHitboxObject.activeSelf)
         {
             punchHitboxObject.SetActive(false);
