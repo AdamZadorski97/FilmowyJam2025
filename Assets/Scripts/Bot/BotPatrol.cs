@@ -213,16 +213,18 @@ public class BotPatrol : MonoBehaviour
         waypoints = null;
         SetAnimationTrigger(attackTrigger);
         agent.updateRotation = false;
-        yield return new WaitForSeconds(finalAttackWaitTime);
 
+        yield return new WaitForSeconds(finalAttackWaitTime);
+        teacherFOV.DetectedPlayer.onPlayerKill();
         if (!string.IsNullOrEmpty(finalAttackTrigger))
         {
             SetAnimationTrigger(finalAttackTrigger);
             currentState = BotState.Alert;
             
             SetAnimationSpeedFloat(0f);
-            
         }
+
+        UIcontrollerPopUp.Instance.Fatality();
     }
 
 

@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.AI;
 using XInputDotNetPure;
 using UnityEngine.Events;
+using Sirenix.OdinInspector;
+using UnityEngine.VFX;
 
 public class PlayerController : MonoBehaviour
 {
@@ -48,6 +50,7 @@ public class PlayerController : MonoBehaviour
 
     private PlayerHitbox punchHitbox;
     private PlayerHitbox kickHitbox;
+    public DestroyController destroyController;
     // ------------------------------------
 
     // NOWE: Pola do Stunu i Cooldownu
@@ -85,11 +88,17 @@ public class PlayerController : MonoBehaviour
     public bool isMan;
     public CapsuleCollider capsuleCollider;
 
-    // Pola do dźwięku
-    public AudioClip gosiaHop;
-    public AudioClip jasHit;
-    public AudioClip gosiaHit;
-    public AudioClip JasWalk;
+    [Header("Helpery do chwytu")]
+    public Transform RightHand;
+    public VisualEffect HitBloodEffect;
+
+    // NOWE: USTAWIENIA DLA BEZPOŚREDNIEGO UDERZENIA NPC
+    [Tooltip("Promień wykrywania celu dla ciosu pięścią.")]
+    [SerializeField] private float punchRange = 1.0f;
+    [Tooltip("Promień wykrywania celu dla kopnięcia.")]
+    [SerializeField] private float kickRange = 1.5f;
+
+
 
     private void Awake()
     {
@@ -161,16 +170,29 @@ public class PlayerController : MonoBehaviour
 
         StartCoroutine(StunCoroutine(stunDuration));
     }
+    [Button]
+    public void onPlayerKill()
+    {
+        destroyController.AktywujDestrukcje();
+        animator.enabled = false;
+    }
 
     private IEnumerator StunCoroutine(float duration)
     {
         float startTime = Time.time;
         float blinkInterval = 0.2f;
         if (animator != null) animator.SetTrigger("Hit");
+        HitBloodEffect.transform.rotation = Quaternion.Euler(
+    Random.Range(-180f, 180f),  // Losowa rotacja wokół osi X
+    Random.Range(-60f, 60f),    // Losowa rotacja wokół osi Y
+    Random.Range(-180f, 180f)   // Losowa rotacja wokół osi Z
+);
+        HitBloodEffect.Play();
         while (Time.time < startTime + duration)
         {
             if (playerRenderer != null)
             {
+                moveInput = Vector3.zero;
                // playerRenderer.enabled = !playerRenderer.enabled; // Mruganie
             }
             yield return new WaitForSeconds(blinkInterval);
@@ -470,7 +492,6 @@ public class PlayerController : MonoBehaviour
     {
         if (canJump && agent != null && agent.enabled)
         {
-            GetComponent<AudioSource>().PlayOneShot(gosiaHop);
             agent.enabled = false;
             StartCoroutine(PerformJump());
         }
@@ -489,10 +510,29 @@ public class PlayerController : MonoBehaviour
 
         if (animator != null) animator.SetTrigger("Punch");
 
-        // NOWE: Włączenie Hitboxa i ustawienie obrażeń punktowych
+        // === NOWA, UPROSZCZONA LOGIKA UDERZENIA NPC ===
+        // 1. Sprawdź, co jest w zasięgu (promień i przesunięcie przed modelem)
+        // Zmieniamy wywołanie na ogólne, bez LayerMask (sprawdza wszystko)
+        Collider[] hitObjects = Physics.OverlapSphere(transform.position + playerMesh.transform.forward * 0.5f, punchRange);
+
+        foreach (Collider hitCollider in hitObjects)
+        {
+            // 2. SPRAWDZAMY TYLKO, CZY MA KOMPONENT StudentsAI
+            StudentsAI studentAI = hitCollider.GetComponent<StudentsAI>();
+
+            if (studentAI != null)
+            {
+                studentAI.GetHit(5); // 5 to obrażenia/punkty z Punch
+                GetHit();
+                break; // Uderzamy tylko pierwszego znalezionego NPC
+            }
+        }
+        // =========================================================
+
+        // Włączenie fizycznego Hitboxa (dla środowiska/innych graczy, jak dotychczas)
         if (punchHitbox != null && punchHitboxObject != null)
         {
-            punchHitbox.SetScoreDamage(5); // Ustaw, że Punch odejmuje 5 punktów
+            punchHitbox.SetScoreDamage(5);
             punchHitbox.ResetHitbox();
             punchHitboxObject.SetActive(true);
         }
@@ -513,10 +553,27 @@ public class PlayerController : MonoBehaviour
 
         if (animator != null) animator.SetTrigger("Kick");
 
-        // NOWE: Włączenie Hitboxa i ustawienie obrażeń punktowych
+        // === NOWA, UPROSZCZONA LOGIKA UDERZENIA NPC ===
+        Collider[] hitObjects = Physics.OverlapSphere(transform.position + playerMesh.transform.forward * 1.0f, kickRange);
+
+        foreach (Collider hitCollider in hitObjects)
+        {
+            // SPRAWDZAMY TYLKO, CZY MA KOMPONENT StudentsAI
+            StudentsAI studentAI = hitCollider.GetComponent<StudentsAI>();
+
+            if (studentAI != null)
+            {
+                studentAI.GetHit(15); // 15 to obrażenia/punkty z Kick
+                GetHit();
+                break;
+            }
+        }
+        // =========================================================
+
+        // Włączenie fizycznego Hitboxa (dla środowiska/innych graczy, jak dotychczas)
         if (kickHitbox != null && kickHitboxObject != null)
         {
-            kickHitbox.SetScoreDamage(15); // Ustaw, że Kick odejmuje 15 punktów
+            kickHitbox.SetScoreDamage(15);
             kickHitbox.ResetHitbox();
             kickHitboxObject.SetActive(true);
         }
@@ -578,8 +635,6 @@ public class PlayerController : MonoBehaviour
             InputController.Instance.Vibrate(0.25f, InputController.Instance.Player2Actions, 0.3f);
         }
 
-        if (isMan) GetComponent<AudioSource>().PlayOneShot(jasHit);
-        else GetComponent<AudioSource>().PlayOneShot(gosiaHit);
     }
 
     public void WalkSound()
@@ -588,8 +643,6 @@ public class PlayerController : MonoBehaviour
         {
             var actions = playerID == 1 ? InputController.Instance.Player1Actions : InputController.Instance.Player2Actions;
             InputController.Instance.Vibrate(0.1f, actions, 0.1f);
-
-            if (isMan) GetComponent<AudioSource>().PlayOneShot(JasWalk);
         }
     }
 }

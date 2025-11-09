@@ -62,6 +62,8 @@ public class BoardController : MonoBehaviour
             {
                 Debug.Log("Animacja rysowania zakończona.");
             });
+
+        UIcontrollerPopUp.Instance.IncraseRep();
     }
 
     /// <summary>

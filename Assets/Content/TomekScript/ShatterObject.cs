@@ -3,8 +3,8 @@
 public class ShatterObject : MonoBehaviour
 {
     [Header("Explosion Settings")]
-    [SerializeField] private float explosionForce = 500f;
-    [SerializeField] private float explosionRadius = 5f;
+    [SerializeField] private float explosionForce = 0.05f;
+    [SerializeField] private float explosionRadius = 1f;
     [SerializeField] private float upwardModifier = 0.5f;
     [SerializeField] private ForceMode forceMode = ForceMode.Impulse;
 
@@ -25,10 +25,5 @@ public class ShatterObject : MonoBehaviour
 
         Debug.Log($"💥 Explosion triggered on children of {name}");
     }
-
-    // Opcjonalnie: eksplozja automatycznie przy starcie
-    private void OnEnable()
-    {
-        Invoke("ExplodeChildren", 0.0f); // możesz opóźnić np. o 0.5 sekundy
-    }
+    
 }

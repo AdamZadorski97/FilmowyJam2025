@@ -27,7 +27,7 @@ public class DestroyController : MonoBehaviour
         // 3. Zastosowanie siły do podrzucenia obiektu (w górę - Vector3.up - oraz losowo)
         Vector3 losowyKierunek = Random.insideUnitSphere.normalized;
         // Zapewniamy, że dominującym kierunkiem jest GÓRA, mieszając go z losowym
-        Vector3 kierunekWypchniecia = (Vector3.up * 1.5f + losowyKierunek).normalized;
+        Vector3 kierunekWypchniecia = (Vector3.up) - Vector3.forward;
         rb.AddForce(kierunekWypchniecia * silaPodrzucenia, ForceMode.Impulse);
 
         // 4. Zastosowanie losowego momentu obrotowego

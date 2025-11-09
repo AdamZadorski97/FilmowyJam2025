@@ -30,11 +30,30 @@ public class HoldInteractor : MonoBehaviour
     [Tooltip("Wywoływane, gdy gracz PRAWIDŁOWO przytrzyma przycisk przez 'maxHoldTime'")]
     public UnityEvent OnHoldComplete;
 
+    [Space]
+
+    [Header("Second Interaction")]
+
+    public bool SecondInteraction = false;
+
+    // --- Zmiana 1: Dodanie eventu startu przytrzymania ---
+    [Tooltip("Wywoływane, gdy gracz ZACZYNA przytrzymywać przycisk.")]
+    public UnityEvent OnHoldStart2;
+    // -------------------------------------------------------
+
+    [Tooltip("Wywoływane, gdy gracz PRAWIDŁOWO przytrzyma przycisk przez 'maxHoldTime'")]
+    public UnityEvent OnHoldComplete2;
+
     // --- Zmienne prywatne ---
     private PlayerController currentPlayerInTrigger;
     private float currentHoldTime = 0f;
     private bool isHolding = false;
     private bool holdWasCompleted = false;
+
+    // SECONDARY INTERACTION VARIABLES
+    private float currentHoldTime2 = 0f;
+    private bool isHolding2 = false;
+    private bool holdWasCompleted2 = false;
 
     // --- DEBUG ---
     [Header("Debug")]
@@ -62,6 +81,12 @@ public class HoldInteractor : MonoBehaviour
         return Mathf.Clamp01(currentHoldTime / maxHoldTime);
     }
 
+    public float GetHoldProgress2()
+    {
+        if (maxHoldTime <= 0) return 0;
+        return Mathf.Clamp01(currentHoldTime2 / maxHoldTime);
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         PlayerController player = other.GetComponent<PlayerController>();
@@ -72,6 +97,12 @@ public class HoldInteractor : MonoBehaviour
         currentHoldTime = 0f;
         isHolding = false;
         holdWasCompleted = false;
+
+        // Reset stanu Secondary
+        currentHoldTime2 = 0f;
+        isHolding2 = false;
+        holdWasCompleted2 = false;
+
     }
 
     private void OnTriggerExit(Collider other)
@@ -92,77 +123,145 @@ public class HoldInteractor : MonoBehaviour
                 currentPlayerInTrigger.OnActionFinished.Invoke(); // WYZWALANIE ZAKOŃCZENIA
             }
 
+            // Anulowanie Secondary
+            if (isHolding2 && !holdWasCompleted2)
+            {
+                Log("...Secondary: Gracz trzymał, ale wyszedł. ANULOWANIE.");
+                // Możesz potrzebować HoldProgressService.Hide(ID, 'Secondary') jeśli używasz drugiego paska
+                currentPlayerInTrigger.OnActionFinished.Invoke();
+            }
+
             Log("...Czyszczę referencję do gracza.");
             currentPlayerInTrigger = null;
             currentHoldTime = 0f;
             isHolding = false;
             holdWasCompleted = false;
+            currentHoldTime2 = 0f;
+            isHolding2 = false;
+            holdWasCompleted2 = false;
         }
     }
 
     private void Update()
     {
-        if (currentPlayerInTrigger == null || holdWasCompleted) return;
+        if (currentPlayerInTrigger == null) return;
 
-        bool isInteractPressed = false;
         int currentID = currentPlayerInTrigger.playerID;
+        bool isInteractPressed = false;
+        bool isSecondInteractPressed = false; // Nowa zmienna dla drugiej interakcji
 
-        // Zakładamy, że PlayerController i InputController są poprawnie zaimplementowane
+        // -----------------------------------------------------------------------------------
+        // 1. ODCZYT WEJŚCIA
+        // -----------------------------------------------------------------------------------
+
+        // Odczyt wejścia Primary Action (niezmieniony)
         if (currentID == 1)
         {
             isInteractPressed = InputController.Instance.Player1Actions.interactionAction.IsPressed;
+            if (SecondInteraction)
+            {
+                // Załóżmy, że Player1Actions ma secondaryAction
+                isSecondInteractPressed = InputController.Instance.Player1Actions.jumpAction.IsPressed;
+            }
         }
         else if (currentID == 2)
         {
             isInteractPressed = InputController.Instance.Player2Actions.interactionAction.IsPressed;
+            if (SecondInteraction)
+            {
+                // Załóżmy, że Player2Actions ma secondaryAction
+                isSecondInteractPressed = InputController.Instance.Player2Actions.jumpAction.IsPressed;
+            }
         }
 
-        // --- Logika Timera ---
-        if (isInteractPressed)
+        // -----------------------------------------------------------------------------------
+        // 2. LOGIKA PRIMARY INTERACTION (oryginalna)
+        // -----------------------------------------------------------------------------------
+
+        if (!holdWasCompleted) // Kontynuujemy tylko jeśli primary nie jest ukończona
         {
-            if (!isHolding)
+            if (isInteractPressed)
             {
-                Log("Gracz ZACZĄŁ trzymać przycisk.");
-                isHolding = true;
+                if (!isHolding)
+                {
+                    Log("Gracz ZACZĄŁ trzymać przycisk (Primary).");
+                    isHolding = true;
+                    OnHoldStart.Invoke();
+                    HoldProgressService.Show(this, currentID);
+                    currentPlayerInTrigger.OnActionStarted.Invoke();
+                }
 
-                // --- Zmiana 1: Wywołanie eventu OnHoldStart ---
-                OnHoldStart.Invoke();
-                // ---------------------------------------------
+                currentHoldTime += Time.deltaTime;
 
-                // Użycie statycznego serwisu (który przekieruje do Singletona)
-                HoldProgressService.Show(this, currentID);
-                currentPlayerInTrigger.OnActionStarted.Invoke(); // WYZWALANIE ROZPOCZĘCIA
+                if (currentHoldTime >= maxHoldTime)
+                {
+                    ScoreService.AddPoints(currentPlayerInTrigger.playerID, 10);
+                    Log("SUKCES! Osiągnięto maxHoldTime (Primary).");
+                    OnHoldComplete.Invoke();
+                    HoldProgressService.Hide(currentID);
+                    currentPlayerInTrigger.OnActionFinished.Invoke();
+                    holdWasCompleted = true;
+                }
             }
-
-            currentHoldTime += Time.deltaTime;
-
-            if (currentHoldTime >= maxHoldTime && !holdWasCompleted)
+            else
             {
-                ScoreService.AddPoints(currentPlayerInTrigger.playerID, 10);
-                Log("SUKCES! Osiągnięto maxHoldTime.");
-
-                OnHoldComplete.Invoke();
-                // Użycie statycznego serwisu (który przekieruje do Singletona)
-                HoldProgressService.Hide(currentID);
-
-                currentPlayerInTrigger.OnActionFinished.Invoke(); // WYZWALANIE ZAKOŃCZENIA
-                holdWasCompleted = true;
+                if (isHolding)
+                {
+                    Log("Gracz PUŚCIŁ przycisk (Primary) przed czasem. ANULOWANIE.");
+                    HoldProgressService.Hide(currentID);
+                    currentPlayerInTrigger.OnActionFinished.Invoke();
+                    isHolding = false;
+                    currentHoldTime = 0f;
+                }
             }
-        }
-        else
+        } // Koniec bloku Primary Interaction
+
+        // -----------------------------------------------------------------------------------
+        // 3. LOGIKA SECOND INTERACTION (NOWA, warunkowa)
+        // -----------------------------------------------------------------------------------
+
+        if (SecondInteraction && !holdWasCompleted2) // Kontynuujemy tylko jeśli SecondInteraction jest TRUE i nieukończona
         {
-            // Gracz NIE trzyma przycisku
-            if (isHolding)
+            if (isSecondInteractPressed)
             {
-                Log("Gracz PUŚCIŁ przycisk przed czasem. ANULOWANIE.");
+                if (!isHolding2)
+                {
+                    Log("Gracz ZACZĄŁ trzymać przycisk (Secondary).");
+                    isHolding2 = true;
+                    OnHoldStart2.Invoke();
 
-                // Użycie statycznego serwisu (który przekieruje do Singletona)
-                HoldProgressService.Hide(currentID);
-                currentPlayerInTrigger.OnActionFinished.Invoke(); // WYZWALANIE ZAKOŃCZENIA (anulowanie)
+                    // UWAGA: Jeśli SecondInteraction ma mieć swój własny pasek postępu, 
+                    // musisz dostosować HoldProgressService.Show, aby obsługiwał dwie akcje.
+                    // Na razie używamy tylko logiki.
+                    // HoldProgressService.Show(this, currentID, "Secondary"); 
+                    currentPlayerInTrigger.OnActionStarted.Invoke();
+                }
 
-                isHolding = false;
-                currentHoldTime = 0f;
+                currentHoldTime2 += Time.deltaTime;
+
+                if (currentHoldTime2 >= maxHoldTime)
+                {
+                    ScoreService.AddPoints(currentPlayerInTrigger.playerID, 20); // Dajmy inne punkty dla drugiej akcji
+                    Log("SUKCES! Osiągnięto maxHoldTime (Secondary).");
+                    OnHoldComplete2.Invoke();
+
+                    // HoldProgressService.Hide(currentID, "Secondary");
+                    currentPlayerInTrigger.OnActionFinished.Invoke();
+                    holdWasCompleted2 = true;
+                }
             }
-        }
+            else
+            {
+                if (isHolding2)
+                {
+                    Log("Gracz PUŚCIŁ przycisk (Secondary) przed czasem. ANULOWANIE.");
+
+                    // HoldProgressService.Hide(currentID, "Secondary");
+                    currentPlayerInTrigger.OnActionFinished.Invoke();
+                    isHolding2 = false;
+                    currentHoldTime2 = 0f;
+                }
+            }
+        } // Koniec bloku Second Interaction
     }
 }

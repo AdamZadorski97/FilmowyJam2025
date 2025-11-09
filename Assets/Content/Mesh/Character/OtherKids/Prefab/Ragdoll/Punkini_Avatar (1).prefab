@@ -2135,6 +2135,9 @@ GameObject:
   - component: {fileID: 6752079429438892220}
   - component: {fileID: 4440731087749084754}
   - component: {fileID: 7636679498554868416}
+  - component: {fileID: 7456663678361485378}
+  - component: {fileID: 8267575002992303126}
+  - component: {fileID: 2190642609601171761}
   m_Layer: 0
   m_Name: Punkini_Avatar (1)
   m_TagString: Untagged
@@ -2195,6 +2198,74 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   silaPodrzucenia: 5
   momentObrotowy: 5
+--- !u!195 &7456663678361485378
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6268980835913642502}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &8267575002992303126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6268980835913642502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcc12739247006b43aef83c19eac8d17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attitude: 0
+  HostileDetectionRange: 10
+  FriendlyDetectionRange: 8
+  maxHealth: 100
+  fleeDistance: 20
+  FleeSpeed: 7
+  WanderRadius: 30
+  MinChatTime: 3
+  MaxChatTime: 8
+  GroupChatRadius: 5
+  CircleRadius: 1.5
+  DoorCheckDistance: 1
+  Edyp: 0
+--- !u!65 &2190642609601171761
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6268980835913642502}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.3, y: 1.03, z: 0.3}
+  m_Center: {x: 0, y: 0.73, z: 0}
 --- !u!1 &6487835937808914067
 GameObject:
   m_ObjectHideFlags: 0
